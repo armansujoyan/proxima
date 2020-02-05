@@ -4,3 +4,4 @@
 
 # Disable IDEA configurations
 .idea
+.DS_Store
