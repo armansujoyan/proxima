@@ -1,2 +1,2 @@
 #pragma once
-#cmakedefine ROOT_DIR "@CMAKE_SOURCE_DIR@"
+#define ROOT_DIR "@CMAKE_SOURCE_DIR@/"
