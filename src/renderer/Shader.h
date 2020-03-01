@@ -13,7 +13,7 @@
 #include <sstream>
 #include <iostream>
 
-#include "../utils/Debug.h"
+#include "utils/Debug.h"
 
 class Shader
 {
