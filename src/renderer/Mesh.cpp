@@ -3,7 +3,7 @@
 //
 
 #include "Mesh.h"
-#include "../utils/Debug.h"
+#include <utils/Debug.h>
 
 Mesh::Mesh(const std::string& path) {
     InitializeMesh(IndexedObject(path));
