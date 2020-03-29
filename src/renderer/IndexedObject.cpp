@@ -7,6 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include <map>
+
 #include "../utils/StringUtils.h"
 
 IndexedObject::~IndexedObject() = default;
