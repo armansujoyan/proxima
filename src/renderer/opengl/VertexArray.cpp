@@ -33,3 +33,8 @@ void VertexArray::bind() const {
 void VertexArray::unbind() const {
     GLCall(glad_glBindVertexArray(0));
 }
+
+void VertexArray::AddBuffer(const IndexBuffer &ib) {
+    bind();
+    ib.bind();
+}
