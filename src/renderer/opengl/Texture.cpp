@@ -8,8 +8,8 @@ Texture::Texture(const char* texPath, const bool flip, const unsigned int texUni
     GLCall(glad_glGenTextures(1, &textureId));
     GLCall(glad_glBindTexture(GL_TEXTURE_2D, textureId));
 
-    loadTexture(texPath, sourceType, flip);
     createSampler();
+    loadTexture(texPath, sourceType, flip);
 }
 
 Texture::~Texture() {
