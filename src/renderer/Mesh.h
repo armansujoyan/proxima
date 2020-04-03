@@ -5,9 +5,9 @@
 #ifndef PROXIMA_MESH_H
 #define PROXIMA_MESH_H
 
+#include "IndexedObject.h"
 #include <glad/glad.h>
 #include <string>
-#include "IndexedObject.h"
 
 enum MeshBufferPosition {
     POSITION_BUFFER,
@@ -18,7 +18,7 @@ enum MeshBufferPosition {
 
 class Mesh {
 public:
-    explicit Mesh(const std::string& filePath);
+    explicit Mesh(const IndexedObject& indexedObject);
 
     void Draw();
 

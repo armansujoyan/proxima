@@ -3,10 +3,10 @@
 //
 
 #include "Mesh.h"
-#include "../utils/Debug.h"
+#include <utils/Debug.h>
 
-Mesh::Mesh(const std::string& path) {
-    InitializeMesh(IndexedObject(path));
+Mesh::Mesh(const IndexedObject& indexedObject) {
+    InitializeMesh(indexedObject);
 }
 
 void Mesh::InitializeMesh(const IndexedObject& model) {
