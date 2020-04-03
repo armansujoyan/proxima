@@ -20,6 +20,7 @@ class Shader
 public:
     unsigned int ID;
 
+    Shader(): ID(0) {};
     Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr)
     {
         std::string vertexCode;

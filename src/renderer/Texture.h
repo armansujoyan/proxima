@@ -11,7 +11,9 @@
 
 class Texture {
 public:
-    Texture(const char* texPath, const bool flip = true, const unsigned int texUnitId = 0, const GLenum sourceType = GL_RGB);
+    explicit Texture(const char* texPath, bool flip = true,
+            unsigned int texUnitId = 0, const GLenum sourceType = GL_RGB);
+    Texture(): textureId(0), samplerId(0), texUnitId(0) {};
     ~Texture();
     void setParameter(GLenum parameter, GLenum value) const;
     void bind() const;
