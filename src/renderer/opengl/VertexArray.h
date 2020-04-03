@@ -8,6 +8,7 @@
 #include "utils/Debug.h"
 #include "VertexBuffer.h"
 #include "VertexBufferLayout.h"
+#include "IndexBuffer.h"
 
 class VertexArray {
 public:
@@ -16,6 +17,7 @@ public:
     void bind() const;
     void unbind() const;
     void AddBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout);
+    void AddBuffer(const IndexBuffer& ib);
 private:
     unsigned int m_vaoId;
 };
