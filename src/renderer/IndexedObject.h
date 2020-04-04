@@ -34,8 +34,6 @@ private:
     std::vector<glm::vec2> m_raw_textures;
     std::vector<glm::vec3> m_raw_normals;
 
-    glm::vec3 ParseVec3(const std::string& line);
-    glm::vec2 ParseVec2(const std::string& line);
     void ParseFace(const std::string& line);
     void GenerateIndexedObject();
 

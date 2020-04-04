@@ -5,7 +5,6 @@
 #include "IndexedObject.h"
 #include <iostream>
 #include <fstream>
-#include <sstream>
 #include <map>
 
 #include <utils/StringUtils.h>
@@ -49,33 +48,6 @@ IndexedObject::IndexedObject(const std::string &path) {
     }
 
     GenerateIndexedObject();
-}
-
-glm::vec3 IndexedObject::ParseVec3(const std::string &line) {
-    std::stringstream ss(line);
-    float parsedValues[3];
-
-    for (float &parsedValue : parsedValues) {
-        ss >> parsedValue;
-    }
-
-    return glm::vec3(
-            parsedValues[0],
-            parsedValues[1],
-            parsedValues[2]);
-}
-
-glm::vec2 IndexedObject::ParseVec2(const std::string &line) {
-    std::stringstream ss(line);
-    float parsedValues[3];
-
-    for (int i = 0; i < 2; ++i) {
-        ss >> parsedValues[i];
-    }
-
-    return glm::vec2(
-            parsedValues[0],
-            parsedValues[1]);
 }
 
 void IndexedObject::ParseFace(const std::string &line) {
