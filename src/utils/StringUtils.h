@@ -8,6 +8,7 @@
 #include <string>
 #include <iterator>
 #include <algorithm>
+#include <sstream>
 
 template <class Container>
 static void split(const std::string& str, Container& cont, char delim = ' ') {
