@@ -12,12 +12,20 @@
 Mesh OBJLoader::load(const std::string &path) {
     IndexedObject geometry = IndexedObject(path);
     std::map<std::string, Material> materialsMap = parseMaterials(path);
-    return Mesh(geometry);
+
+    if (!materialsMap.empty()) {
+        return Mesh(geometry, materialsMap);
+    } else {
+        return Mesh(geometry);
+    }
 }
 
 std::map<std::string, Material> OBJLoader::parseMaterials(const std::string &objectPath) {
     std::string mtlPath = getMaterialPathFromObjectFile(objectPath);
-    std::map<std::string, Material> materialsMap = getMaterialsMap(mtlPath, objectPath);
+    std::map<std::string, Material> materialsMap;
+    if (!mtlPath.empty()) {
+         materialsMap = getMaterialsMap(mtlPath, objectPath);
+    }
 
     return materialsMap;
 }
@@ -109,15 +117,19 @@ void OBJLoader::addMaterialFromMetaToMap(std::map<std::string, Material> &map, M
 }
 
 std::string OBJLoader::getMaterialFilePath(std::fstream &objectFile, const std::string &objectFilePath) {
+    std::string materialFilePath;
+
     while(objectFile.good()) {
         std::string line;
         getline(objectFile, line);
 
-        if(line.find("mtllib") != std::string::npos) {
+        if(line.find("mtllib") == 0) {
             objectFile.close();
-            return getMaterialPathFromLine(line, objectFilePath);
+            materialFilePath = getMaterialPathFromLine(line, objectFilePath);
         }
     }
+
+    return materialFilePath;
 }
 
 std::string OBJLoader::getMaterialPathFromLine(const std::string &currentLine, const std::string &objectFilePath) {

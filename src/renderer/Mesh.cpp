@@ -66,3 +66,7 @@ Mesh::~Mesh() {
     GLCall(glDeleteBuffers(m_BufferCount, m_VertexBuffers));
     GLCall(glDeleteVertexArrays(1, &m_VertexArrayID));
 }
+
+Mesh::Mesh(const IndexedObject &geometry,const  std::map<std::string, Material> &materialsMap) {
+//Some implementation with materials
+}
