@@ -22,7 +22,7 @@ Material::Material(MaterialMeta &meta) : m_key_diffuse(meta.Kd), m_key_ambient(m
     if (!meta.map_Ks.empty()) {
         m_specular_texture = new Texture(meta.map_Kd, true, 1, GL_RGBA);
     } else {
-        m_diffuse_texture = nullptr;
+        m_specular_texture = nullptr;
     }
 
     m_shader = new Shader(ROOT_DIR "/resources/shaders/default.vs", ROOT_DIR "/resources/shaders/default.fs");
