@@ -12,7 +12,7 @@
 
 class OBJLoader: public Loader {
 public:
-    static Mesh load(const std::string& path);
+    static Mesh * load(const std::string& path);
 private:
     static std::map<std::string, Material> parseMaterials(const std::string& path);
 

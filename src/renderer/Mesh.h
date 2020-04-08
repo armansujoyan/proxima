@@ -21,17 +21,18 @@ enum MeshBufferPosition {
 
 class Mesh {
 public:
-    explicit Mesh(const IndexedObject& indexedObject);
-    Mesh(const IndexedObject &geometry,const std::map<std::string, Material> &materialsMap);
+    explicit Mesh(const IndexedObject *indexedObject);
+    Mesh(const IndexedObject *geometry,std::map<std::string, Material> materialsMap);
 
     void Draw();
 
     virtual ~Mesh();
+    std::map<std::string, Material> m_material_map;
 private:
+
     static const unsigned int m_BufferCount = 4;
 
-    void InitializeMesh(const IndexedObject& obj);
-
+    void InitializeMesh(const IndexedObject *obj);
     GLuint m_VertexArrayID{};
     GLuint m_VertexBuffers[m_BufferCount]{};
     unsigned int m_IndexCount{};

@@ -22,20 +22,22 @@ struct MaterialMeta {
 class Material {
 public:
     Material();
+    explicit Material(MaterialMeta &meta);
     Material(glm::vec3 key_diffuse, glm::vec3 key_ambient, glm::vec3 key_specular):
         m_key_diffuse(key_diffuse), m_key_ambient(key_ambient), m_key_specular(key_specular) {};
-    explicit Material(MaterialMeta &meta);
-    void addDiffuseMap(Texture& diffuse);
-    void addSpecularMap(Texture& specular);
-    void addShader(Shader& shader);
+    ~Material() = default;
+
+    void addDiffuseMap(Texture *diffuse);
+    void addSpecularMap(Texture *specular);
+    void addShader(Shader *shader);
+    void bindDiffuse();
 private:
     glm::vec3 m_key_diffuse{};
     glm::vec3 m_key_ambient{};
     glm::vec3 m_key_specular{};
-    Texture m_diffuse_texture;
-    Texture m_specular_texture;
-    Shader m_shader;
+    Texture* m_diffuse_texture{};
+    Texture* m_specular_texture{};
+    Shader* m_shader{};
 };
-
 
 #endif //PROXIMA_MATERIAL_H

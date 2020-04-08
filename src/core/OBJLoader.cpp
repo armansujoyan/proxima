@@ -9,14 +9,14 @@
 
 #include <map>
 
-Mesh OBJLoader::load(const std::string &path) {
-    IndexedObject geometry = IndexedObject(path);
+Mesh* OBJLoader::load(const std::string &path) {
+    auto *geometry = new IndexedObject(path);
     std::map<std::string, Material> materialsMap = parseMaterials(path);
 
     if (!materialsMap.empty()) {
-        return Mesh(geometry, materialsMap);
+        return new Mesh(geometry, materialsMap);
     } else {
-        return Mesh(geometry);
+        return new Mesh(geometry);
     }
 }
 
@@ -110,10 +110,9 @@ OBJLoader::getMaterialsMap(const std::string &materialFilePath, const std::strin
 }
 
 void OBJLoader::addMaterialFromMetaToMap(std::map<std::string, Material> &map, MaterialMeta &meta) {
-    Material currentMaterial = Material(meta);
+    auto currentMaterial = Material(meta);
     std::string currentMaterialName = meta.name;
-    std::pair<std::string, Material> nameToMaterial = std::pair(currentMaterialName, currentMaterial);
-    map.insert(nameToMaterial);
+    map.insert(std::make_pair(currentMaterialName, currentMaterial));
 }
 
 std::string OBJLoader::getMaterialFilePath(std::fstream &objectFile, const std::string &objectFilePath) {

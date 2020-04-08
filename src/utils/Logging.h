@@ -5,7 +5,6 @@
 #ifndef PROXIMA_LOGGING_H
 #define PROXIMA_LOGGING_H
 
-
 static void printUnhandledFileMessage() {
     std::cout << "Error: Cannot open the file for loading the model" << std::endl;
 }
