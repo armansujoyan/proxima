@@ -2,13 +2,13 @@
 // Created by Arman Sujoyan on 2/8/20.
 //
 
-#include "IndexedObject.h"
+#include "IndexedGeometry.h"
 #include <map>
 
-IndexedObject::~IndexedObject() = default;
+IndexedGeometry::~IndexedGeometry() = default;
 
-IndexedObject::IndexedObject(const std::vector<glm::vec3> &raw_positions, const std::vector<glm::vec2> &raw_textures,
-                             const std::vector<glm::vec3> &raw_normals, const std::vector<IObject> &coupled_indices) {
+IndexedGeometry::IndexedGeometry(const std::vector<glm::vec3> &raw_positions, const std::vector<glm::vec2> &raw_textures,
+                                 const std::vector<glm::vec3> &raw_normals, const std::vector<IObject> &coupled_indices) {
     GenerateIndexedObject(raw_positions, raw_textures, raw_normals, coupled_indices);
 }
 
@@ -17,7 +17,7 @@ static bool CompareOBJIndexPtr(const IObject* a, const IObject* b)
     return a->m_position_index < b->m_position_index;
 }
 
-void IndexedObject::GenerateIndexedObject(
+void IndexedGeometry::GenerateIndexedObject(
         const std::vector<glm::vec3> &raw_positions,
         const std::vector<glm::vec2> &raw_textures,
         const std::vector<glm::vec3> &raw_normals,
@@ -44,7 +44,7 @@ void IndexedObject::GenerateIndexedObject(
 }
 
 // TODO: Optimize this lookup and make it O(logn) via binary search
-unsigned int IndexedObject::findExistingIndex(
+unsigned int IndexedGeometry::findExistingIndex(
         const std::vector<std::pair<IObject, unsigned int>>& lookup, IObject* current) {
     for(auto element: lookup) {
         IObject candidate = element.first;

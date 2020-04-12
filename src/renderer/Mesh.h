@@ -9,7 +9,7 @@
 #include <string>
 #include <map>
 
-#include "IndexedObject.h"
+#include "IndexedGeometry.h"
 #include "Material.h"
 
 enum MeshBufferPosition {
@@ -21,8 +21,8 @@ enum MeshBufferPosition {
 
 class Mesh {
 public:
-    explicit Mesh(const IndexedObject *indexedObject);
-    Mesh(const IndexedObject *geometry,Material materialsMap);
+    explicit Mesh(const IndexedGeometry *indexedObject);
+    Mesh(const IndexedGeometry *geometry, Material materialsMap);
 
     void Draw();
 
@@ -32,7 +32,7 @@ private:
 
     static const unsigned int m_BufferCount = 4;
 
-    void InitializeMesh(const IndexedObject *obj);
+    void InitializeMesh(const IndexedGeometry *obj);
     GLuint m_VertexArrayID{};
     GLuint m_VertexBuffers[m_BufferCount]{};
     unsigned int m_IndexCount{};

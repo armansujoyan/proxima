@@ -100,7 +100,7 @@ std::vector<GeometryMaterialPair> OBJLoader::parseGeometry(const std::string &pa
 
     mesh_geometries.reserve(point_groups.size());
     for(const auto& pointGroup: point_groups) {
-        auto* currentGeometry = new IndexedObject(
+        auto* currentGeometry = new IndexedGeometry(
                 raw_vertices, raw_textures, raw_normals, pointGroup.m_coupled_indices);
         GeometryMaterialPair currentPair = GeometryMaterialPair(pointGroup.m_material_name, currentGeometry);
         mesh_geometries.push_back(currentPair);

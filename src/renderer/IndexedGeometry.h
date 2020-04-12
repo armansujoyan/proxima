@@ -2,8 +2,8 @@
 // Created by Arman Sujoyan on 2/8/20.
 //
 
-#ifndef PROXIMA_INDEXEDOBJECT_H
-#define PROXIMA_INDEXEDOBJECT_H
+#ifndef PROXIMA_INDEXEDGEOMETRY_H
+#define PROXIMA_INDEXEDGEOMETRY_H
 
 #include <glm/glm.hpp>
 #include <string>
@@ -20,11 +20,11 @@ struct IObject {
     }
 };
 
-class IndexedObject {
+class IndexedGeometry {
 public:
-    explicit IndexedObject(const std::vector<glm::vec3> &raw_positions, const std::vector<glm::vec2> &raw_textures,
-                           const std::vector<glm::vec3> &raw_normals, const std::vector<IObject> &coupled_indices);
-    ~IndexedObject();
+    explicit IndexedGeometry(const std::vector<glm::vec3> &raw_positions, const std::vector<glm::vec2> &raw_textures,
+                             const std::vector<glm::vec3> &raw_normals, const std::vector<IObject> &coupled_indices);
+    ~IndexedGeometry();
 
     std::vector<glm::vec3> m_indexed_positions;
     std::vector<glm::vec2> m_indexed_textures;
@@ -43,4 +43,4 @@ private:
 };
 
 
-#endif //PROXIMA_INDEXEDOBJECT_H
+#endif //PROXIMA_INDEXEDGEOMETRY_H

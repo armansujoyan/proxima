@@ -6,18 +6,16 @@
 #include "Material.h"
 #include <utils/Debug.h>
 
-#include <utility>
-
-Mesh::Mesh(const IndexedObject *indexedObject) {
+Mesh::Mesh(const IndexedGeometry *indexedObject) {
     InitializeMesh(indexedObject);
 }
 
-Mesh::Mesh(const IndexedObject *geometry, Material material):
+Mesh::Mesh(const IndexedGeometry *geometry, Material material):
     m_material(material) {
     InitializeMesh(geometry);
 }
 
-void Mesh::InitializeMesh(const IndexedObject *model) {
+void Mesh::InitializeMesh(const IndexedGeometry *model) {
     m_IndexCount = model->m_indices.size();
 
     GLCall(glad_glGenVertexArrays(1, &m_VertexArrayID));

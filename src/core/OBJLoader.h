@@ -10,7 +10,7 @@
 #include <renderer/Mesh.h>
 #include <renderer/Material.h>
 
-typedef std::pair<std::string, IndexedObject*> GeometryMaterialPair;
+typedef std::pair<std::string, IndexedGeometry*> GeometryMaterialPair;
 
 class OBJLoader: public Loader {
 public:
