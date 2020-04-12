@@ -3,67 +3,13 @@
 //
 
 #include "IndexedObject.h"
-#include <iostream>
-#include <fstream>
 #include <map>
-
-#include <utils/StringUtils.h>
 
 IndexedObject::~IndexedObject() = default;
 
-// TODO: Add possibility to generate normals when they are not present
-IndexedObject::IndexedObject(const std::string &path) {
-    std::fstream objectFile;
-    objectFile.open(path);
-
-    std::string line;
-
-    if (objectFile.is_open()) {
-        while(objectFile.good()) {
-            getline(objectFile, line);
-
-            const char* lineCstr = line.c_str();
-            unsigned int lineLength = line.size();
-
-            if(lineLength < 2)
-                continue;
-
-            switch(lineCstr[0]) {
-                case 'v':
-                    if(lineCstr[1] == 'n')
-                        this->m_raw_normals.push_back(ParseVec3(line.substr(2)));
-                    else if (lineCstr[1] == 't')
-                        this->m_raw_textures.push_back(ParseVec2(line.substr(2)));
-                    else if (lineCstr[1] == ' ' || lineCstr[1] == '\t')
-                        this->m_raw_positions.push_back(ParseVec3(line.substr(1)));
-                    break;
-                case 'f':
-                    ParseFace(line.substr(2));
-                    break;
-                default: break;
-            };
-        }
-    } else {
-        std::cout << "Error: Cannot open the file for loading the model" << std::endl;
-    }
-
-    GenerateIndexedObject();
-}
-
-void IndexedObject::ParseFace(const std::string &line) {
-    std::vector<std::string> tokens;
-    split(line, tokens, ' ');
-
-    for(const auto& token: tokens) {
-        std::vector<std::string> coupled_index_elements;
-        split(token, coupled_index_elements, '/');
-        IObject current{};
-        current.m_position_index = std::stoi(coupled_index_elements[0]);
-        current.m_texture_index = std::stoi(coupled_index_elements[1]);
-        current.m_normal_index = std::stoi(coupled_index_elements[2]);
-
-        this->m_coupled_indices.push_back(current);
-    }
+IndexedObject::IndexedObject(const std::vector<glm::vec3> &raw_positions, const std::vector<glm::vec2> &raw_textures,
+                             const std::vector<glm::vec3> &raw_normals, const std::vector<IObject> &coupled_indices) {
+    GenerateIndexedObject(raw_positions, raw_textures, raw_normals, coupled_indices);
 }
 
 static bool CompareOBJIndexPtr(const IObject* a, const IObject* b)
@@ -71,22 +17,24 @@ static bool CompareOBJIndexPtr(const IObject* a, const IObject* b)
     return a->m_position_index < b->m_position_index;
 }
 
-void IndexedObject::GenerateIndexedObject() {
+void IndexedObject::GenerateIndexedObject(
+        const std::vector<glm::vec3> &raw_positions,
+        const std::vector<glm::vec2> &raw_textures,
+        const std::vector<glm::vec3> &raw_normals,
+        const std::vector<IObject> &coupled_indices) {
     unsigned int index = 0;
 
     std::vector<std::pair<IObject, unsigned int>> lookup;
 
     unsigned int existingIndex;
 
-    for (int i = 0; i < this->m_coupled_indices.size(); ++i) {
-        IObject current = m_coupled_indices[i];
-
+    for (auto current : coupled_indices) {
         existingIndex = findExistingIndex(lookup, &current);
         if(existingIndex == (unsigned int)-1) {
             this->m_indices.push_back(index);
-            this->m_indexed_positions.push_back(this->m_raw_positions[current.m_position_index - 1]);
-            this->m_indexed_textures.push_back(this->m_raw_textures[current.m_texture_index - 1]);
-            this->m_indexed_normals.push_back(this->m_raw_normals[current.m_normal_index - 1]);
+            this->m_indexed_positions.push_back(raw_positions[current.m_position_index - 1]);
+            this->m_indexed_textures.push_back(raw_textures[current.m_texture_index - 1]);
+            this->m_indexed_normals.push_back(raw_normals[current.m_normal_index - 1]);
             lookup.emplace_back(current, index);
             index++;
         } else {
@@ -94,7 +42,6 @@ void IndexedObject::GenerateIndexedObject() {
         }
     }
 }
-
 
 // TODO: Optimize this lookup and make it O(logn) via binary search
 unsigned int IndexedObject::findExistingIndex(

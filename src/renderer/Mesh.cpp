@@ -12,8 +12,8 @@ Mesh::Mesh(const IndexedObject *indexedObject) {
     InitializeMesh(indexedObject);
 }
 
-Mesh::Mesh(const IndexedObject *geometry,std::map<std::string, Material> materialsMap):
-    m_material_map(std::move(materialsMap)) {
+Mesh::Mesh(const IndexedObject *geometry, Material material):
+    m_material(material) {
     InitializeMesh(geometry);
 }
 
@@ -63,13 +63,15 @@ void Mesh::InitializeMesh(const IndexedObject *model) {
 }
 
 void Mesh::Draw() {
-    //m_material_map.find("car9:Car_18C_D")->second.bindDiffuse();
+    m_material.attach();
 
     GLCall(glad_glBindVertexArray(m_VertexArrayID));
 
     GLCall(glad_glDrawElements(GL_TRIANGLES, m_IndexCount, GL_UNSIGNED_INT, nullptr));
 
     GLCall(glad_glBindVertexArray(0));
+
+    m_material.detach();
 }
 
 Mesh::~Mesh() {

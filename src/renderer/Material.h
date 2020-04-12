@@ -30,7 +30,8 @@ public:
     void addDiffuseMap(Texture *diffuse);
     void addSpecularMap(Texture *specular);
     void addShader(Shader *shader);
-    void bindDiffuse();
+    void attach();
+    void detach();
 private:
     glm::vec3 m_key_diffuse{};
     glm::vec3 m_key_ambient{};

@@ -22,7 +22,8 @@ struct IObject {
 
 class IndexedObject {
 public:
-    explicit IndexedObject(const std::string &path);
+    explicit IndexedObject(const std::vector<glm::vec3> &raw_positions, const std::vector<glm::vec2> &raw_textures,
+                           const std::vector<glm::vec3> &raw_normals, const std::vector<IObject> &coupled_indices);
     ~IndexedObject();
 
     std::vector<glm::vec3> m_indexed_positions;
@@ -30,16 +31,15 @@ public:
     std::vector<glm::vec3> m_indexed_normals;
     std::vector<unsigned int> m_indices;
 private:
-    std::vector<glm::vec3> m_raw_positions;
-    std::vector<glm::vec2> m_raw_textures;
-    std::vector<glm::vec3> m_raw_normals;
+    void GenerateIndexedObject (
+            const std::vector<glm::vec3> &raw_positions,
+            const std::vector<glm::vec2> &raw_textures,
+            const std::vector<glm::vec3> &raw_normals,
+            const std::vector<IObject> &coupled_indices);
 
-    void ParseFace(const std::string& line);
-    void GenerateIndexedObject();
-
-    unsigned int findExistingIndex(const std::vector<std::pair<IObject, unsigned int>>& lookup, IObject* current);
-
-    std::vector<IObject> m_coupled_indices;
+    static unsigned int findExistingIndex (
+            const std::vector<std::pair<IObject, unsigned int>>& lookup,
+            IObject* current);
 };
 
 

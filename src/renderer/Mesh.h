@@ -22,12 +22,12 @@ enum MeshBufferPosition {
 class Mesh {
 public:
     explicit Mesh(const IndexedObject *indexedObject);
-    Mesh(const IndexedObject *geometry,std::map<std::string, Material> materialsMap);
+    Mesh(const IndexedObject *geometry,Material materialsMap);
 
     void Draw();
 
     virtual ~Mesh();
-    std::map<std::string, Material> m_material_map;
+    Material m_material;
 private:
 
     static const unsigned int m_BufferCount = 4;

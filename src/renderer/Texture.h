@@ -12,20 +12,23 @@
 class Texture {
 public:
     explicit Texture(const std::string &texPath, bool flip = true,
-            unsigned int texUnitId = 0, const GLenum sourceType = GL_RGB);
+            unsigned int texUnitId = 0);
     Texture(): textureId(0), samplerId(0), texUnitId(0) {};
     ~Texture();
     void setParameter(GLenum parameter, GLenum value) const;
     void bind() const;
+    void unbind() const;
 private:
     unsigned int textureId{};
     unsigned int samplerId{};
     unsigned int texUnitId{};
 
     void createSampler();
-    void loadTexture(const std::string &texPath, const GLenum sourceType, const bool flip);
+    static void loadTexture(const std::string &texPath, bool flip);
 
     void bindSampler();
+
+    static GLenum getTextureSourceType(int channels);
 };
 
 #endif //PROXIMA_TEXTURE_H

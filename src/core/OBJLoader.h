@@ -10,9 +10,11 @@
 #include <renderer/Mesh.h>
 #include <renderer/Material.h>
 
+typedef std::pair<std::string, IndexedObject*> GeometryMaterialPair;
+
 class OBJLoader: public Loader {
 public:
-    static Mesh * load(const std::string& path);
+    static std::vector<Mesh*> load(const std::string& path);
 private:
     static std::map<std::string, Material> parseMaterials(const std::string& path);
 
@@ -27,6 +29,9 @@ private:
 
     static std::string getMaterialName(const std::string &line);
     static std::string parseObjString(const std::string &line);
+
+    static std::vector<GeometryMaterialPair> parseGeometry(const std::string &path);
+    static void ParseFace(const std::string& line, std::vector<IObject> &couples_indices);
 };
 
 
