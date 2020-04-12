@@ -9,7 +9,7 @@
 
 #include <map>
 
-struct PointGroup {
+struct VertexGroup {
     std::string m_name;
     std::string m_material_name;
     std::vector<IObject> m_coupled_indices;
@@ -40,8 +40,8 @@ std::vector<GeometryMaterialPair> OBJLoader::parseGeometry(const std::string &pa
     std::vector<glm::vec2> raw_textures;
 
     std::vector<GeometryMaterialPair> mesh_geometries;
-    std::vector<PointGroup> point_groups;
-    PointGroup currentGroup = PointGroup();
+    std::vector<VertexGroup> point_groups;
+    VertexGroup currentGroup = VertexGroup();
     bool isFirstGroup = true;
     std::string lastMaterial;
 
@@ -84,7 +84,7 @@ std::vector<GeometryMaterialPair> OBJLoader::parseGeometry(const std::string &pa
                         } else {
                             currentGroup.m_material_name = lastMaterial;
                             point_groups.push_back(currentGroup);
-                            currentGroup = PointGroup();
+                            currentGroup = VertexGroup();
                             currentGroup.m_name = parseObjString(line);
                         }
                     }
@@ -245,14 +245,24 @@ void OBJLoader::ParseFace(const std::string &line, std::vector<IObject> &coupled
     split(line, tokens, ' ');
 
     for(const auto& token: tokens) {
-        std::vector<std::string> coupled_index_elements;
-        split(token, coupled_index_elements, '/');
-        IObject current{};
-        current.m_position_index = std::stoi(coupled_index_elements[0]);
-        current.m_texture_index = std::stoi(coupled_index_elements[1]);
-        current.m_normal_index = std::stoi(coupled_index_elements[2]);
-
-        coupled_indices.push_back(current);
+        parseFaceTokenAndAddToCoupledIndices(token, coupled_indices);
     }
+}
+
+IObject OBJLoader::getParsedIndicesFromIndexSet(const std::string &faceString) {
+    std::vector<std::string> coupled_index_elements;
+    split(faceString, coupled_index_elements, '/');
+    IObject current{};
+    current.m_position_index = std::stoi(coupled_index_elements[0]);
+    current.m_texture_index = std::stoi(coupled_index_elements[1]);
+    current.m_normal_index = std::stoi(coupled_index_elements[2]);
+
+    return current;
+}
+
+void
+OBJLoader::parseFaceTokenAndAddToCoupledIndices(const std::string &faceToken, std::vector<IObject> &coupledIndices) {
+    IObject currentIndexMeta = getParsedIndicesFromIndexSet(faceToken);
+    coupledIndices.push_back(currentIndexMeta);
 }
 

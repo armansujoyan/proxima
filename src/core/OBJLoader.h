@@ -32,6 +32,10 @@ private:
 
     static std::vector<GeometryMaterialPair> parseGeometry(const std::string &path);
     static void ParseFace(const std::string& line, std::vector<IObject> &couples_indices);
+
+    static IObject getParsedIndicesFromIndexSet(const std::string &faceString);
+
+    static void parseFaceTokenAndAddToCoupledIndices(const std::string &faceToken, std::vector<IObject> &coupledIndices);
 };
 
 
