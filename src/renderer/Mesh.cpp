@@ -7,12 +7,13 @@
 #include <utils/Debug.h>
 #include <renderer/opengl/VertexArray.h>
 
-Mesh::Mesh(const IndexedGeometry *indexedObject) {
+Mesh::Mesh(const IndexedGeometry *indexedObject):
+meshVao(nullptr), m_material(nullptr), meshIndexBuffer(nullptr) {
     InitializeMesh(indexedObject);
 }
 
 Mesh::Mesh(const IndexedGeometry *geometry, Material* material):
-    m_material(material) {
+m_material(material), meshVao(nullptr), meshIndexBuffer(nullptr) {
     InitializeMesh(geometry);
 }
 
@@ -48,7 +49,7 @@ void Mesh::Draw() {
 
     meshVao->bind();
 
-    GLCall(glad_glDrawElements(GL_TRIANGLES, m_IndexCount, GL_UNSIGNED_INT, nullptr));
+    GLCall(glad_glDrawElements(GL_TRIANGLES, m_IndexCount, GL_UNSIGNED_INT, nullptr))
 
     meshVao->unbind();
 

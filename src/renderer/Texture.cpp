@@ -24,14 +24,15 @@ texUnitId(T.texUnitId), texturePath(T.texturePath), textureId(0), samplerId(0), 
 Texture &Texture::operator=(const Texture &T) {
     if (this == &T) {
         return *this;
-    }
-    else {
+    } else {
         GLCall(glad_glDeleteTextures(1, &textureId));
         GLCall(glad_glDeleteSamplers(1, &samplerId));
 
         this->texUnitId = T.texUnitId;
+        this->texturePath = T.texturePath;
+        this->flipped = T.flipped;
 
-        createTexture(T.texturePath, T.flipped);
+        createTexture(texturePath, flipped);
 
         return *this;
     }

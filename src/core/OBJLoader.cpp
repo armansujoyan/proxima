@@ -23,13 +23,17 @@ std::vector<Mesh*> OBJLoader::load(const std::string &path) {
     if (!materialsMap.empty()) {
         for(const auto& geometry: geometries) {
             std::string materialName = geometry.first;
-            Material* currentMeshMaterial = materialsMap[materialName];
+            auto* currentMeshMaterial = new Material(*materialsMap[materialName]);
             object_meshes.push_back(new Mesh(geometry.second, currentMeshMaterial));
         }
     } else {
         for(const auto& geometry: geometries) {
             object_meshes.push_back(new Mesh(geometry.second));
         }
+    }
+
+    for(auto &material: materialsMap) {
+        delete material.second;
     }
 
     return object_meshes;
