@@ -17,23 +17,19 @@ struct VertexGroup {
 
 std::vector<Mesh*> OBJLoader::load(const std::string &path) {
     std::vector<GeometryMaterialPair> geometries = parseGeometry(path);
-    std::map<std::string, Material*> materialsMap = parseMaterials(path);
+    std::map<std::string, MaterialMeta> materialsMap = parseMaterials(path);
     std::vector<Mesh*> object_meshes;
 
     if (!materialsMap.empty()) {
         for(const auto& geometry: geometries) {
             std::string materialName = geometry.first;
-            auto* currentMeshMaterial = new Material(*materialsMap[materialName]);
+            auto* currentMeshMaterial = new Material(materialsMap[materialName]);
             object_meshes.push_back(new Mesh(geometry.second, currentMeshMaterial));
         }
     } else {
         for(const auto& geometry: geometries) {
             object_meshes.push_back(new Mesh(geometry.second));
         }
-    }
-
-    for(auto &material: materialsMap) {
-        delete material.second;
     }
 
     return object_meshes;
@@ -113,14 +109,14 @@ std::vector<GeometryMaterialPair> OBJLoader::parseGeometry(const std::string &pa
     return mesh_geometries;
 }
 
-std::map<std::string, Material*> OBJLoader::parseMaterials(const std::string &objectPath) {
+std::map<std::string, MaterialMeta> OBJLoader::parseMaterials(const std::string &objectPath) {
     std::string mtlPath = getMaterialPathFromObjectFile(objectPath);
-    std::map<std::string, Material*> materialsMap;
+    std::map<std::string, MaterialMeta> materialsMetaMap;
     if (!mtlPath.empty()) {
-         materialsMap = getMaterialsMap(mtlPath, objectPath);
+        materialsMetaMap = getMaterialsMetaMap(mtlPath, objectPath);
     }
 
-    return materialsMap;
+    return materialsMetaMap;
 }
 
 std::string OBJLoader::getMaterialPathFromObjectFile(const std::string &objectFilePath) {
@@ -137,12 +133,12 @@ std::string OBJLoader::getMaterialPathFromObjectFile(const std::string &objectFi
     return materialFilePath;
 }
 
-std::map<std::string, Material*>
-OBJLoader::getMaterialsMap(const std::string &materialFilePath, const std::string &objectFilePath) {
+std::map<std::string, MaterialMeta>
+OBJLoader::getMaterialsMetaMap(const std::string &materialFilePath, const std::string &objectFilePath) {
     std::fstream mtlFile;
     mtlFile.open(materialFilePath);
 
-    std::map<std::string, Material*> materialsMap;
+    std::map<std::string, MaterialMeta> materialMetaMap;
     MaterialMeta currentMaterialMeta;
     std::string line;
 
@@ -161,7 +157,7 @@ OBJLoader::getMaterialsMap(const std::string &materialFilePath, const std::strin
                 if (isFirstMaterial) {
                     isFirstMaterial = false;
                 } else {
-                    addMaterialFromMetaToMap(materialsMap, currentMaterialMeta);
+                    materialMetaMap.insert(std::make_pair(currentMaterialMeta.name, currentMaterialMeta));
                 }
                 currentMaterialMeta = MaterialMeta();
                 currentMaterialMeta.name = getMaterialName(line);
@@ -194,18 +190,13 @@ OBJLoader::getMaterialsMap(const std::string &materialFilePath, const std::strin
                 continue;
             }
         }
-        addMaterialFromMetaToMap(materialsMap,currentMaterialMeta);
+
+        materialMetaMap.insert(std::make_pair(currentMaterialMeta.name, currentMaterialMeta));
     } else {
         std::cout << "Error: Cannot open the file for loading the material" << std::endl;
     }
 
-    return materialsMap;
-}
-
-void OBJLoader::addMaterialFromMetaToMap(std::map<std::string, Material*> &map, MaterialMeta &meta) {
-    auto *currentMaterial = new Material(meta);
-    std::string currentMaterialName = meta.name;
-    map.insert(std::make_pair(currentMaterialName, currentMaterial));
+    return materialMetaMap;
 }
 
 std::string OBJLoader::getMaterialFilePath(std::fstream &objectFile, const std::string &objectFilePath) {
