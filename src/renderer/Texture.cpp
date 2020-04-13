@@ -5,7 +5,7 @@
 #include "Texture.h"
 
 Texture::Texture(const std::string &texPath, const bool flip, const unsigned int texUnitId) :
-texUnitId(texUnitId)
+texUnitId(texUnitId), texturePath(texPath), textureId(0), samplerId(0), flipped(flip)
 {
     GLCall(glad_glGenTextures(1, &textureId));
     GLCall(glad_glBindTexture(GL_TEXTURE_2D, textureId));
@@ -16,9 +16,40 @@ texUnitId(texUnitId)
     GLCall(glad_glBindTexture(GL_TEXTURE_2D, 0));
 }
 
+Texture::Texture(const Texture &T) :
+texUnitId(T.texUnitId), texturePath(T.texturePath), textureId(0), samplerId(0), flipped(T.flipped) {
+    createTexture(T.texturePath, T.flipped);
+}
+
+Texture &Texture::operator=(const Texture &T) {
+    if (this == &T) {
+        return *this;
+    }
+    else {
+        GLCall(glad_glDeleteTextures(1, &textureId));
+        GLCall(glad_glDeleteSamplers(1, &samplerId));
+
+        this->texUnitId = T.texUnitId;
+
+        createTexture(T.texturePath, T.flipped);
+
+        return *this;
+    }
+}
+
 Texture::~Texture() {
     GLCall(glad_glDeleteTextures(1, &textureId));
     GLCall(glad_glDeleteSamplers(1, &samplerId));
+}
+
+void Texture::createTexture(const std::string &texturePath, bool flipped) {
+    GLCall(glad_glGenTextures(1, &textureId));
+    GLCall(glad_glBindTexture(GL_TEXTURE_2D, textureId));
+
+    createSampler();
+    loadTexture(texturePath, flipped);
+
+    GLCall(glad_glBindTexture(GL_TEXTURE_2D, 0));
 }
 
 void Texture::createSampler() {
@@ -56,10 +87,6 @@ void Texture::bind() const {
     GLCall(glad_glBindSampler(texUnitId, samplerId));
     GLCall(glad_glActiveTexture(GL_TEXTURE0 + texUnitId));
     GLCall(glad_glBindTexture(GL_TEXTURE_2D, textureId));
-}
-
-void Texture::bindSampler() {
-    GLCall(glad_glBindSampler(texUnitId, samplerId));
 }
 
 void Texture::unbind() const {
