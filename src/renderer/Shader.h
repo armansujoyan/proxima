@@ -12,6 +12,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <utility>
 
 #include "utils/Debug.h"
 
@@ -21,15 +22,21 @@ public:
     unsigned int ID;
 
     Shader(): ID(0),
-    vertexShaderPath(nullptr), fragmentSahderPath(nullptr), geometryShaderPath(nullptr) {};
+    vertexShaderPath(""), fragmentShaderPath(""), geometryShaderPath("") {};
 
-    Shader(char* vertexPath, char* fragmentPath, char* geometryPath = nullptr) : ID(0),
-        vertexShaderPath(vertexPath), fragmentSahderPath(fragmentPath), geometryShaderPath(geometryPath)
+    Shader(std::string vertexPath, std::string fragmentPath, std::string geometryPath = "") :
+        ID(0),
+        vertexShaderPath(std::move(vertexPath)),
+        fragmentShaderPath(std::move(fragmentPath)),
+        geometryShaderPath(std::move(std::move(geometryPath)))
     {
-        initializeShader(vertexPath, fragmentPath, geometryPath);
+        initializeShader(
+                vertexShaderPath.c_str(),
+                fragmentShaderPath.c_str(),
+                geometryShaderPath.c_str());
     }
 
-    Shader(const Shader &S): Shader(S.vertexShaderPath, S.fragmentSahderPath, S.geometryShaderPath) {}
+    Shader(const Shader &S): Shader(S.vertexShaderPath, S.fragmentShaderPath, S.geometryShaderPath) {}
 
     Shader & operator=(const Shader &S) {
         if (this == &S) {
@@ -38,7 +45,10 @@ public:
         else {
             GLCall(glad_glDeleteProgram(ID));
 
-            initializeShader(S.vertexShaderPath, S.fragmentSahderPath, S.geometryShaderPath);
+            initializeShader(
+                    S.vertexShaderPath.c_str(),
+                    S.fragmentShaderPath.c_str(),
+                    S.geometryShaderPath.c_str());
 
             return *this;
         }
@@ -46,13 +56,9 @@ public:
 
     ~Shader() {
         GLCall(glad_glDeleteProgram(ID));
-
-        delete vertexShaderPath;
-        delete fragmentSahderPath;
-        delete geometryShaderPath;
     }
 
-    void initializeShader(char* vertexPath, char* fragmentPath, char* geometryPath) {
+    void initializeShader(const char* vertexPath, const char* fragmentPath, const char* geometryPath) {
         std::string vertexCode;
         std::string fragmentCode;
         std::string geometryCode;
@@ -78,7 +84,7 @@ public:
             vertexCode = vShaderStream.str();
             fragmentCode = fShaderStream.str();
 
-            if(geometryPath != nullptr)
+            if(geometryPath[0] != '\0')
             {
                 gShaderFile.open(geometryPath);
                 std::stringstream gShaderStream;
@@ -107,7 +113,7 @@ public:
         checkCompileErrors(fragment, "FRAGMENT");
 
         unsigned int geometry;
-        if(geometryPath != nullptr)
+        if(geometryPath[0] != '\0')
         {
             const char * gShaderCode = geometryCode.c_str();
             geometry = glCreateShader(GL_GEOMETRY_SHADER);
@@ -119,7 +125,7 @@ public:
         ID = glCreateProgram();
         GLCall(glAttachShader(ID, vertex));
         GLCall(glAttachShader(ID, fragment));
-        if (geometryPath) {
+        if (geometryPath[0] != '\0') {
             GLCall(glAttachShader(ID, geometry));
         }
         GLCall(glLinkProgram(ID));
@@ -127,7 +133,7 @@ public:
 
         GLCall(glDeleteShader(vertex));
         GLCall(glDeleteShader(fragment));
-        if(geometryPath) {
+        if(geometryPath[0] != '\0') {
             GLCall(glDeleteShader(geometry));
         }
     }
@@ -224,9 +230,9 @@ private:
         }
     }
 
-    char* vertexShaderPath;
-    char* fragmentSahderPath;
-    char* geometryShaderPath;
+    std::string vertexShaderPath;
+    std::string fragmentShaderPath;
+    std::string geometryShaderPath;
 };
 
 #endif //PROXIMA_SHADER_H
