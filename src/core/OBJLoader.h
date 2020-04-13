@@ -16,11 +16,11 @@ class OBJLoader: public Loader {
 public:
     static std::vector<Mesh*> load(const std::string& path);
 private:
-    static std::map<std::string, Material> parseMaterials(const std::string& path);
+    static std::map<std::string, Material*> parseMaterials(const std::string& path);
 
-    static std::map<std::string, Material>
+    static std::map<std::string, Material*>
     getMaterialsMap(const std::string &materialFilePath, const std::string &objectFilePath);
-    static void addMaterialFromMetaToMap(std::map<std::string, Material> &map, MaterialMeta &meta);
+    static void addMaterialFromMetaToMap(std::map<std::string, Material*> &map, MaterialMeta &meta);
 
     static std::string getMaterialPathFromObjectFile(const std::string &basicString);
     static std::string getMaterialFilePath(std::fstream &objectFile, const std::string &objectFilePath);

@@ -12,7 +12,8 @@ Material::Material():
     m_specular_texture(nullptr),
     m_shader(nullptr) {};
 
-Material::Material(MaterialMeta &meta) : m_key_diffuse(meta.Kd), m_key_ambient(meta.Ka), m_key_specular(meta.Ks) {
+Material::Material(MaterialMeta &meta) : m_key_diffuse(meta.Kd), m_key_ambient(meta.Ka), m_key_specular(meta.Ks),
+    m_material_name(meta.name) {
     if (!meta.map_Kd.empty()) {
         m_diffuse_texture = new Texture(meta.map_Kd, true, 0);
     } else {
@@ -58,4 +59,10 @@ void Material::detach() {
     if (m_specular_texture != nullptr) {
         m_specular_texture->unbind();
     }
+}
+
+Material::~Material() {
+    delete m_diffuse_texture;
+    delete m_specular_texture;
+    delete m_shader;
 }

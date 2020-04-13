@@ -15,7 +15,7 @@ struct VAOElement {
 
     static unsigned int GetSizeOfType(unsigned int type){
         switch(type){
-            case GL_FLOAT: return 4;
+            case GL_FLOAT:
             case GL_UNSIGNED_INT: return 4;
             case GL_UNSIGNED_BYTE: return 1;
         }
@@ -35,24 +35,24 @@ public:
     template<typename T> inline static constexpr bool false_v = false;
 
     template<typename T>
-    void Push(unsigned int count){
+    void Push(unsigned int count, bool normalized){
         static_assert(false_v<T>);
     };
 
     template<>
-    void Push<float>(unsigned int count){
-        m_Elements.push_back({ GL_FLOAT, count, GL_FALSE });
+    void Push<float>(unsigned int count, bool normalized){
+        m_Elements.push_back({ GL_FLOAT, count, normalized });
         m_Stride += count * VAOElement::GetSizeOfType(GL_FLOAT);
     }
 
     template<>
-    void Push<unsigned int>(unsigned int count){
+    void Push<unsigned int>(unsigned int count, bool normalized){
         m_Elements.push_back({ GL_UNSIGNED_INT, count, GL_FALSE });
         m_Stride += count * VAOElement::GetSizeOfType(GL_UNSIGNED_INT);
     }
 
     template<>
-    void Push<unsigned char>(unsigned int count){
+    void Push<unsigned char>(unsigned int count, bool normalized){
         m_Elements.push_back({ GL_UNSIGNED_BYTE, count, GL_TRUE });
         m_Stride += count * VAOElement::GetSizeOfType(GL_UNSIGNED_BYTE);
     }

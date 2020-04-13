@@ -13,15 +13,15 @@ VertexArray::~VertexArray() {
 }
 
 void VertexArray::AddBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout){
-    bind();
+    this->bind();
     vb.bind();
     const auto& elements = layout.GetElements();
     unsigned int offset = 0;
     for (unsigned int i = 0; i < elements->size(); i++){
         const auto& element = elements->at(i);
-        GLCall(glEnableVertexAttribArray(i));
+        GLCall(glEnableVertexAttribArray(i))
         GLCall(glVertexAttribPointer(i, element.count, element.type, element.normalized,
-                                     layout.GetStride(), (const void*)(size_t)offset));
+                                     layout.GetStride(), (const void*)(size_t)offset))
         offset += element.count * VAOElement::GetSizeOfType(element.type);
     }
 }
@@ -35,6 +35,21 @@ void VertexArray::unbind() const {
 }
 
 void VertexArray::AddBuffer(const IndexBuffer &ib) {
-    bind();
+    this->bind();
     ib.bind();
+    this->unbind();
+}
+
+void VertexArray::AddBuffer(const std::vector<VertexBuffer*>& vertexBuffers, VertexBufferLayout* layout) {
+    this->bind();
+    const auto& elements = layout->GetElements();
+
+    for(size_t i = 0; i < vertexBuffers.size(); i++) {
+        vertexBuffers[i]->bind();
+        auto element = elements->at(i);
+        GLCall(glEnableVertexAttribArray(i))
+        GLCall(glVertexAttribPointer(i, element.count, element.type, element.normalized, 0, nullptr))
+    }
+
+    this->unbind();
 }

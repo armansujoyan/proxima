@@ -25,7 +25,7 @@ public:
     explicit Material(MaterialMeta &meta);
     Material(glm::vec3 key_diffuse, glm::vec3 key_ambient, glm::vec3 key_specular):
         m_key_diffuse(key_diffuse), m_key_ambient(key_ambient), m_key_specular(key_specular) {};
-    ~Material() = default;
+    ~Material();
 
     void addDiffuseMap(Texture *diffuse);
     void addSpecularMap(Texture *specular);
@@ -33,6 +33,7 @@ public:
     void attach();
     void detach();
 private:
+    std::string m_material_name{};
     glm::vec3 m_key_diffuse{};
     glm::vec3 m_key_ambient{};
     glm::vec3 m_key_specular{};

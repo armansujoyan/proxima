@@ -8,33 +8,24 @@
 #include <glad/glad.h>
 #include <string>
 #include <map>
+#include <renderer/opengl/VertexArray.h>
 
 #include "IndexedGeometry.h"
 #include "Material.h"
 
-enum MeshBufferPosition {
-    POSITION_BUFFER,
-    TEXTURE_BUFFER,
-    NORMAL_BUFFER,
-    INDEX_BUFFER
-};
-
 class Mesh {
 public:
     explicit Mesh(const IndexedGeometry *indexedObject);
-    Mesh(const IndexedGeometry *geometry, Material materialsMap);
+    Mesh(const IndexedGeometry *geometry, Material* material);
+    ~Mesh();
 
     void Draw();
-
-    virtual ~Mesh();
-    Material m_material;
+    Material* m_material;
 private:
-
-    static const unsigned int m_BufferCount = 4;
-
     void InitializeMesh(const IndexedGeometry *obj);
-    GLuint m_VertexArrayID{};
-    GLuint m_VertexBuffers[m_BufferCount]{};
+    VertexArray* meshVao;
+    std::vector<VertexBuffer*> meshVertexBuffers;
+    IndexBuffer* meshIndexBuffer;
     unsigned int m_IndexCount{};
 };
 

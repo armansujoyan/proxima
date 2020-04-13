@@ -17,13 +17,13 @@ struct VertexGroup {
 
 std::vector<Mesh*> OBJLoader::load(const std::string &path) {
     std::vector<GeometryMaterialPair> geometries = parseGeometry(path);
-    std::map<std::string, Material> materialsMap = parseMaterials(path);
+    std::map<std::string, Material*> materialsMap = parseMaterials(path);
     std::vector<Mesh*> object_meshes;
 
     if (!materialsMap.empty()) {
         for(const auto& geometry: geometries) {
             std::string materialName = geometry.first;
-            Material currentMeshMaterial = materialsMap[materialName];
+            Material* currentMeshMaterial = materialsMap[materialName];
             object_meshes.push_back(new Mesh(geometry.second, currentMeshMaterial));
         }
     } else {
@@ -109,9 +109,9 @@ std::vector<GeometryMaterialPair> OBJLoader::parseGeometry(const std::string &pa
     return mesh_geometries;
 }
 
-std::map<std::string, Material> OBJLoader::parseMaterials(const std::string &objectPath) {
+std::map<std::string, Material*> OBJLoader::parseMaterials(const std::string &objectPath) {
     std::string mtlPath = getMaterialPathFromObjectFile(objectPath);
-    std::map<std::string, Material> materialsMap;
+    std::map<std::string, Material*> materialsMap;
     if (!mtlPath.empty()) {
          materialsMap = getMaterialsMap(mtlPath, objectPath);
     }
@@ -133,12 +133,12 @@ std::string OBJLoader::getMaterialPathFromObjectFile(const std::string &objectFi
     return materialFilePath;
 }
 
-std::map<std::string, Material>
+std::map<std::string, Material*>
 OBJLoader::getMaterialsMap(const std::string &materialFilePath, const std::string &objectFilePath) {
     std::fstream mtlFile;
     mtlFile.open(materialFilePath);
 
-    std::map<std::string, Material> materialsMap;
+    std::map<std::string, Material*> materialsMap;
     MaterialMeta currentMaterialMeta;
     std::string line;
 
@@ -198,8 +198,8 @@ OBJLoader::getMaterialsMap(const std::string &materialFilePath, const std::strin
     return materialsMap;
 }
 
-void OBJLoader::addMaterialFromMetaToMap(std::map<std::string, Material> &map, MaterialMeta &meta) {
-    auto currentMaterial = Material(meta);
+void OBJLoader::addMaterialFromMetaToMap(std::map<std::string, Material*> &map, MaterialMeta &meta) {
+    auto *currentMaterial = new Material(meta);
     std::string currentMaterialName = meta.name;
     map.insert(std::make_pair(currentMaterialName, currentMaterial));
 }

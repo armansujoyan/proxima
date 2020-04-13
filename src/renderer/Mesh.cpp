@@ -5,12 +5,13 @@
 #include "Mesh.h"
 #include "Material.h"
 #include <utils/Debug.h>
+#include <renderer/opengl/VertexArray.h>
 
 Mesh::Mesh(const IndexedGeometry *indexedObject) {
     InitializeMesh(indexedObject);
 }
 
-Mesh::Mesh(const IndexedGeometry *geometry, Material material):
+Mesh::Mesh(const IndexedGeometry *geometry, Material* material):
     m_material(material) {
     InitializeMesh(geometry);
 }
@@ -18,61 +19,48 @@ Mesh::Mesh(const IndexedGeometry *geometry, Material material):
 void Mesh::InitializeMesh(const IndexedGeometry *model) {
     m_IndexCount = model->m_indices.size();
 
-    GLCall(glad_glGenVertexArrays(1, &m_VertexArrayID));
-    GLCall(glad_glBindVertexArray(m_VertexArrayID));
+    meshVao = new VertexArray();
+    auto *vLayout = new VertexBufferLayout();
+    vLayout->Push<float>(3, false);
+    vLayout->Push<float>(2, false);
+    vLayout->Push<float>(3, false);
 
-    GLCall(glad_glGenBuffers(m_BufferCount, m_VertexBuffers));
+    auto *positionBuffer = new VertexBuffer(&model->m_indexed_positions[0],
+            sizeof(model->m_indexed_positions[0]) * model->m_indexed_positions.size());
+    meshVertexBuffers.push_back(positionBuffer);
 
-    GLCall(glad_glBindBuffer(GL_ARRAY_BUFFER, m_VertexBuffers[POSITION_BUFFER]));
-    GLCall(glad_glBufferData(
-            GL_ARRAY_BUFFER,
-            sizeof(model->m_indexed_positions[0]) * model->m_indexed_positions.size(),
-            &model->m_indexed_positions[0],
-            GL_STATIC_DRAW));
-    GLCall(glad_glEnableVertexAttribArray(0));
-    GLCall(glad_glVertexAttribPointer(0, 3, GL_FLOAT, GL_TRUE, 0, nullptr));
+    auto *textureBuffer = new VertexBuffer(&model->m_indexed_textures[0],
+            sizeof(model->m_indexed_textures[0]) * model->m_indexed_textures.size());
+    meshVertexBuffers.push_back(textureBuffer);
 
-    GLCall(glad_glBindBuffer(GL_ARRAY_BUFFER, m_VertexBuffers[TEXTURE_BUFFER]));
-    GLCall(glad_glBufferData(
-            GL_ARRAY_BUFFER,
-            sizeof(model->m_indexed_textures[0]) * model->m_indexed_textures.size(),
-            &model->m_indexed_textures[0],
-            GL_STATIC_DRAW));
-    GLCall(glad_glEnableVertexAttribArray(1));
-    GLCall(glad_glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr));
+    auto *normalBuffer = new VertexBuffer(&model->m_indexed_normals[0],
+            sizeof(model->m_indexed_normals[0]) * model->m_indexed_normals.size());
+    meshVertexBuffers.push_back(normalBuffer);
 
-    GLCall(glad_glBindBuffer(GL_ARRAY_BUFFER, m_VertexBuffers[NORMAL_BUFFER]));
-    GLCall(glad_glBufferData(
-            GL_ARRAY_BUFFER,
-            sizeof(model->m_indexed_normals[0]) * model->m_indexed_normals.size(),
-            &model->m_indexed_normals[0],
-            GL_STATIC_DRAW));
-    GLCall(glad_glEnableVertexAttribArray(2));
-    GLCall(glad_glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, nullptr));
+    meshIndexBuffer = new IndexBuffer(&model->m_indices[0], model->m_indices.size());
 
-    GLCall(glad_glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_VertexBuffers[INDEX_BUFFER]));
-    GLCall(glad_glBufferData(
-            GL_ELEMENT_ARRAY_BUFFER,
-            sizeof(model->m_indices[0]) * model->m_indices.size(),
-            &model->m_indices[0],
-            GL_STATIC_DRAW));
-
-    GLCall(glad_glBindVertexArray(0));
+    meshVao->AddBuffer(meshVertexBuffers, vLayout);
+    meshVao->AddBuffer(*meshIndexBuffer);
 }
 
 void Mesh::Draw() {
-    m_material.attach();
+    m_material->attach();
 
-    GLCall(glad_glBindVertexArray(m_VertexArrayID));
+    meshVao->bind();
 
     GLCall(glad_glDrawElements(GL_TRIANGLES, m_IndexCount, GL_UNSIGNED_INT, nullptr));
 
-    GLCall(glad_glBindVertexArray(0));
+    meshVao->unbind();
 
-    m_material.detach();
+    m_material->detach();
 }
 
 Mesh::~Mesh() {
-    GLCall(glad_glDeleteBuffers(m_BufferCount, m_VertexBuffers));
-    GLCall(glad_glDeleteVertexArrays(1, &m_VertexArrayID));
+    delete meshVao;
+    delete meshIndexBuffer;
+    delete m_material;
+
+    for(auto buffer: meshVertexBuffers) {
+        delete buffer;
+    }
 }
