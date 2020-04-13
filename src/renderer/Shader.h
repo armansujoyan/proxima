@@ -20,9 +20,39 @@ class Shader
 public:
     unsigned int ID;
 
-    Shader(): ID(0) {};
-    Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr)
+    Shader(): ID(0),
+    vertexShaderPath(nullptr), fragmentSahderPath(nullptr), geometryShaderPath(nullptr) {};
+
+    Shader(char* vertexPath, char* fragmentPath, char* geometryPath = nullptr) : ID(0),
+        vertexShaderPath(vertexPath), fragmentSahderPath(fragmentPath), geometryShaderPath(geometryPath)
     {
+        initializeShader(vertexPath, fragmentPath, geometryPath);
+    }
+
+    Shader(const Shader &S): Shader(S.vertexShaderPath, S.fragmentSahderPath, S.geometryShaderPath) {}
+
+    Shader & operator=(const Shader &S) {
+        if (this == &S) {
+            return *this;
+        }
+        else {
+            GLCall(glad_glDeleteProgram(ID));
+
+            initializeShader(S.vertexShaderPath, S.fragmentSahderPath, S.geometryShaderPath);
+
+            return *this;
+        }
+    }
+
+    ~Shader() {
+        GLCall(glad_glDeleteProgram(ID));
+
+        delete vertexShaderPath;
+        delete fragmentSahderPath;
+        delete geometryShaderPath;
+    }
+
+    void initializeShader(char* vertexPath, char* fragmentPath, char* geometryPath) {
         std::string vertexCode;
         std::string fragmentCode;
         std::string geometryCode;
@@ -57,7 +87,7 @@ public:
                 geometryCode = gShaderStream.str();
             }
         }
-        catch (std::ifstream::failure e)
+        catch (std::ifstream::failure &e)
         {
             std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
         }
@@ -67,12 +97,12 @@ public:
         unsigned int vertex, fragment;
 
         vertex = glCreateShader(GL_VERTEX_SHADER);
-        GLCall(glShaderSource(vertex, 1, &vShaderCode, NULL));
+        GLCall(glShaderSource(vertex, 1, &vShaderCode, nullptr));
         GLCall(glCompileShader(vertex));
         checkCompileErrors(vertex, "VERTEX");
 
         fragment = glCreateShader(GL_FRAGMENT_SHADER);
-        GLCall(glShaderSource(fragment, 1, &fShaderCode, NULL));
+        GLCall(glShaderSource(fragment, 1, &fShaderCode, nullptr));
         GLCall(glCompileShader(fragment));
         checkCompileErrors(fragment, "FRAGMENT");
 
@@ -81,7 +111,7 @@ public:
         {
             const char * gShaderCode = geometryCode.c_str();
             geometry = glCreateShader(GL_GEOMETRY_SHADER);
-            GLCall(glShaderSource(geometry, 1, &gShaderCode, NULL));
+            GLCall(glShaderSource(geometry, 1, &gShaderCode, nullptr));
             GLCall(glCompileShader(geometry));
             checkCompileErrors(geometry, "GEOMETRY");
         }
@@ -100,8 +130,8 @@ public:
         if(geometryPath) {
             GLCall(glDeleteShader(geometry));
         }
-
     }
+
     void use()
     {
         GLCall(glUseProgram(ID));
@@ -168,7 +198,7 @@ public:
     }
 
 private:
-    void checkCompileErrors(GLuint shader, std::string type)
+    void checkCompileErrors(GLuint shader, const std::string &type)
     {
         GLint success;
         GLchar infoLog[1024];
@@ -177,7 +207,7 @@ private:
             GLCall(glGetShaderiv(shader, GL_COMPILE_STATUS, &success));
             if(!success)
             {
-                GLCall(glGetShaderInfoLog(shader, 1024, NULL, infoLog));
+                GLCall(glGetShaderInfoLog(shader, 1024, nullptr, infoLog));
                 std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog <<
                 "\n -- --------------------------------------------------- -- " << std::endl;
             }
@@ -187,12 +217,16 @@ private:
             GLCall(glGetProgramiv(shader, GL_LINK_STATUS, &success));
             if(!success)
             {
-                GLCall(glGetProgramInfoLog(shader, 1024, NULL, infoLog));
+                GLCall(glGetProgramInfoLog(shader, 1024, nullptr, infoLog));
                 std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog <<
                 "\n -- --------------------------------------------------- -- " << std::endl;
             }
         }
     }
+
+    char* vertexShaderPath;
+    char* fragmentSahderPath;
+    char* geometryShaderPath;
 };
 
 #endif //PROXIMA_SHADER_H
