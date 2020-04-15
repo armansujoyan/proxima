@@ -53,3 +53,27 @@ bool Collision::sphereIntersectPlane(const glm::vec3 &center, float radius, cons
 
     return true;
 }
+
+bool Collision::sphereIntersectTriangle(const glm::vec3 &center, float radius, const glm::vec3 &velocity,
+                                        const glm::vec3 &vertex1, const glm::vec3 &vertex2, const glm::vec3 &vertex3,
+                                        const glm::vec3 &triangleNormal, float &tMax, glm::vec3 &collisionNormal) {
+    float t = tMax;
+    glm::vec3 collisionCenter;
+
+    if( !sphereIntersectPlane(center, radius, velocity, triangleNormal, vertex1, t)) return false;
+
+    if(t < 0) {
+        collisionCenter = center - (t * triangleNormal);
+    } else {
+        collisionCenter = center + (t * velocity);
+    }
+
+    if ( isPointInsideTriangle(collisionCenter, vertex1, vertex2, vertex3, triangleNormal)) {
+        collisionNormal = triangleNormal;
+        tMax = t;
+
+        return true;
+    }
+
+    return false;
+}
