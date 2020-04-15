@@ -113,9 +113,9 @@ bool Collision::sphereIntersectLineSegment(const glm::vec3 &center, float radius
         float centerProjectionOnLine = glm::dot(centerToVertex, edge);
 
         if (centerProjectionOnLine < 0.0f) {
-//            return sphereIntersectPoint(center, radius, velocity, vertex1, tMax, collisionNormal);
+            return sphereIntersectPoint(center, radius, velocity, vertex1, tMax, collisionNormal);
         } else if (centerProjectionOnLine > edgeLength) {
-//            return sphereIntersectPoint(center, radius, velocity, vertex2, tMax, collisionNormal);
+            return sphereIntersectPoint(center, radius, velocity, vertex2, tMax, collisionNormal);
         } else {
             pointOnEdge = vertex1 + (edge * centerProjectionOnLine);
             collisionNormal = glm::normalize(center - pointOnEdge);
@@ -132,7 +132,7 @@ bool Collision::sphereIntersectLineSegment(const glm::vec3 &center, float radius
 
     if (tMax < 0.0f) return false;
 
-//    if ( !solveCollision(a, b, c, t)) return false;
+    if ( !solveCollision(a, b, c, t)) return false;
 
     if ( t > tMax) return false;
 
@@ -141,14 +141,72 @@ bool Collision::sphereIntersectLineSegment(const glm::vec3 &center, float radius
     float collisionCenterProjectionOnLine = glm::dot(collisionCenter - vertex1, edge);
 
     if (collisionCenterProjectionOnLine < 0.0f) {
-//        return sphereIntersectPoint(center, radius, velocity, vertex1, tMax, collisionNormal);
+        return sphereIntersectPoint(center, radius, velocity, vertex1, tMax, collisionNormal);
     } else if (collisionCenterProjectionOnLine > edgeLength) {
-//        return sphereIntersectPoint(center, radius, velocity, vertex2, tMax, collisionNormal);
+        return sphereIntersectPoint(center, radius, velocity, vertex2, tMax, collisionNormal);
     }
 
     pointOnEdge = vertex1 + (edge * t);
     collisionNormal = glm::normalize(collisionCenter - pointOnEdge);
     tMax = t;
+
+    return true;
+}
+
+bool Collision::sphereIntersectPoint(const glm::vec3 &center, float radius, const glm::vec3 &velocity,
+                                     const glm::vec3 &point, float &tMax, glm::vec3 &collisionNormal) {
+    float t;
+
+    glm::vec3 pointToCenter = center - point;
+    float velocityLength = glm::length(velocity);
+    float pointToCenterLength = glm::length(pointToCenter);
+
+    float a = velocityLength * velocityLength;
+    float b = 2.0f * glm::dot(velocity, pointToCenter);
+    float c = (pointToCenterLength * pointToCenterLength) - (radius * radius);
+
+    if (c < 0.0f) {
+        t = pointToCenterLength - radius;
+
+        if(tMax < t) return false;
+
+        collisionNormal = glm::normalize(pointToCenter);
+
+        tMax = t;
+
+        return true;
+    }
+
+    if (tMax < 0.0f) return false;
+
+    if ( !solveCollision(a, b, c, t)) return false;
+
+    if (t > tMax) return false;
+
+    glm::vec3 collisionCenter = center + (velocity * t);
+
+    collisionNormal = glm::normalize(collisionCenter - point);
+    tMax = t;
+
+    return false;
+}
+
+bool Collision::solveCollision(float a, float b, float c, float &t) {
+    float discriminant = b*b - 4*a*c;
+
+    if (discriminant < 0.0f) return false;
+
+    float sqrtDiscriminant = sqrtf(discriminant);
+
+    float t0 = (-b - sqrtDiscriminant) / (2.0f * a);
+    float t1 = (-b + sqrtDiscriminant) / (2.0f * a);
+
+    float temp;
+    if (t1 < t0) { temp = t0; t0 = t1; t1 = temp; }
+
+    if (t1 < 0.0f) return false;
+
+    if (t0 < 0.0f) t = t1; else t = t0;
 
     return true;
 }

@@ -21,6 +21,12 @@ private:
     sphereIntersectLineSegment(const glm::vec3 &center, float radius, const glm::vec3 &velocity,
                                const glm::vec3 &vertex1,
                                const glm::vec3 &vertex2, float &tMax, glm::vec3 &collisionNormal);
+
+    static bool
+    sphereIntersectPoint(const glm::vec3 &center, float radius, const glm::vec3 &velocity,
+                         const glm::vec3 &point, float &tMax, glm::vec3 &collisionNormal);
+
+    static bool solveCollision(float a, float b, float c, float &t);
 };
 
 
