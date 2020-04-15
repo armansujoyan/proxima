@@ -28,3 +28,28 @@ bool Collision::isPointInsideTriangle(const glm::vec3 &point, const glm::vec3 &v
     return !(glm::dot(pointToEdge, triangleNormal) < 0.0f);
 
 }
+
+bool Collision::sphereIntersectPlane(const glm::vec3 &center, float radius, const glm::vec3 &velocity,
+                                     const glm::vec3 &planeNormal, const glm::vec3 &planePoint, float &tMax) {
+    float numerator = glm::dot(center - planePoint, planeNormal);
+    float denominator = glm::dot(velocity, planeNormal);
+
+    if (numerator < 0.0f || denominator > -0.000001f) {
+
+        if (denominator > -1e-5f) return false;
+
+        if (numerator < -radius) return false;
+
+        tMax = numerator;
+
+        return true;
+    }
+
+    float t = -(numerator/denominator);
+
+    if (t < 0.0f || t > tMax) return false;
+
+    tMax = t;
+
+    return true;
+}
