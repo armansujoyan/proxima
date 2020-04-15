@@ -59,6 +59,7 @@ bool Collision::sphereIntersectTriangle(const glm::vec3 &center, float radius, c
                                         const glm::vec3 &triangleNormal, float &tMax, glm::vec3 &collisionNormal) {
     float t = tMax;
     glm::vec3 collisionCenter;
+    bool edgeCollided = false;
 
     if( !sphereIntersectPlane(center, radius, velocity, triangleNormal, vertex1, t)) return false;
 
@@ -71,9 +72,83 @@ bool Collision::sphereIntersectTriangle(const glm::vec3 &center, float radius, c
     if ( isPointInsideTriangle(collisionCenter, vertex1, vertex2, vertex3, triangleNormal)) {
         collisionNormal = triangleNormal;
         tMax = t;
-
         return true;
     }
 
-    return false;
+    edgeCollided |= sphereIntersectLineSegment(center, radius, velocity, vertex1, vertex2, tMax, collisionNormal);
+
+    edgeCollided |= sphereIntersectLineSegment(center, radius, velocity, vertex2, vertex3, tMax, collisionNormal);
+
+    edgeCollided |= sphereIntersectLineSegment(center, radius, velocity, vertex3, vertex1, tMax, collisionNormal);
+
+    return edgeCollided;
+}
+
+bool Collision::sphereIntersectLineSegment(const glm::vec3 &center, float radius, const glm::vec3 &velocity,
+                                           const glm::vec3 &vertex1, const glm::vec3 &vertex2, float &tMax,
+                                           glm::vec3 &collisionNormal) {
+    glm::vec3 edge, centerToVertex, pointOnEdge, collisionCenter;
+    float t;
+
+    edge = vertex2 - vertex1;
+    centerToVertex = center - vertex1;
+
+    float edgeLength = glm::length(edge);
+
+    if (edgeLength < 1e-5f) return false;
+
+    edge = edge / edgeLength;
+
+    glm::vec3 centerToVertexEdgeCross = glm::cross(centerToVertex, edge);
+    glm::vec3 velocityEdgeCross = glm::cross(velocity, edge);
+
+    float velocityEdgeCrossLength = glm::length(velocityEdgeCross);
+    float centerToVertDotEdgeCross = glm::dot(centerToVertexEdgeCross, velocityEdgeCross);
+
+    float a = velocityEdgeCrossLength * velocityEdgeCrossLength;
+    float b = 2.0f * glm::dot(velocityEdgeCross, centerToVertexEdgeCross);
+    float c = centerToVertDotEdgeCross * centerToVertDotEdgeCross - (radius * radius);
+
+    if ( c < 0.0f) {
+        float centerProjectionOnLine = glm::dot(centerToVertex, edge);
+
+        if (centerProjectionOnLine < 0.0f) {
+//            return sphereIntersectPoint(center, radius, velocity, vertex1, tMax, collisionNormal);
+        } else if (centerProjectionOnLine > edgeLength) {
+//            return sphereIntersectPoint(center, radius, velocity, vertex2, tMax, collisionNormal);
+        } else {
+            pointOnEdge = vertex1 + (edge * centerProjectionOnLine);
+            collisionNormal = glm::normalize(center - pointOnEdge);
+            float collisionNormalLength = glm::length(collisionNormal);
+
+            t = collisionNormalLength - radius;
+            if (tMax < t) return false;
+
+            tMax = t;
+
+            return true;
+        }
+    }
+
+    if (tMax < 0.0f) return false;
+
+//    if ( !solveCollision(a, b, c, t)) return false;
+
+    if ( t > tMax) return false;
+
+    collisionCenter = center  + (t * velocity);
+
+    float collisionCenterProjectionOnLine = glm::dot(collisionCenter - vertex1, edge);
+
+    if (collisionCenterProjectionOnLine < 0.0f) {
+//        return sphereIntersectPoint(center, radius, velocity, vertex1, tMax, collisionNormal);
+    } else if (collisionCenterProjectionOnLine > edgeLength) {
+//        return sphereIntersectPoint(center, radius, velocity, vertex2, tMax, collisionNormal);
+    }
+
+    pointOnEdge = vertex1 + (edge * t);
+    collisionNormal = glm::normalize(collisionCenter - pointOnEdge);
+    tMax = t;
+
+    return true;
 }
