@@ -17,8 +17,13 @@ m_material(material), meshVao(nullptr), meshIndexBuffer(nullptr) {
     InitializeMesh(geometry);
 }
 
+const std::vector<Triangle> &Mesh::getTriangles() const {
+    return triangles;
+}
+
 void Mesh::InitializeMesh(const IndexedGeometry *model) {
     m_IndexCount = model->m_indices.size();
+    triangles = model->m_triangles;
 
     meshVao = new VertexArray();
     auto *vLayout = new VertexBufferLayout();

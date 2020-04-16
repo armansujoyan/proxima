@@ -6,9 +6,22 @@
 #define PROXIMA_COLLISION_H
 
 #include <glm/vec3.hpp>
+#include <vector>
+
+struct Intersection {
+    glm::vec3 nextCenter;
+    glm::vec3 intersectionPoint;
+    glm::vec3 intersectionNormal;
+    float t;
+    unsigned int triangleIndex;
+};
 
 class Collision {
 private:
+    static unsigned int m_maxIntersections = 10;
+    static bool ellipsoidIntersectScene(const glm::vec3 &center, const glm::vec3 &radius, const glm::vec3 &velocity,
+                                        Intersection *intersections, unsigned int &intersectionCount,
+                                        const std::vector<Triangle> &triangles);
     static bool sphereIntersectTriangle(const glm::vec3 &center, float radius, const glm::vec3 &velocity,
             const glm::vec3 &vertex1, const glm::vec3 &vertex2, const glm::vec3 &vertex3,
             const glm::vec3 &triangleNormal, float &tMax, glm::vec3 &collisionNormal);

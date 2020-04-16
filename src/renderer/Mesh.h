@@ -20,11 +20,15 @@ public:
     ~Mesh();
 
     void Draw();
-    Material* m_material;
+
+    const std::vector<Triangle> &getTriangles() const;
+
 private:
+    Material* m_material;
     void InitializeMesh(const IndexedGeometry *obj);
     VertexArray* meshVao;
     std::vector<VertexBuffer*> meshVertexBuffers;
+    std::vector<Triangle> triangles;
     IndexBuffer* meshIndexBuffer;
     unsigned int m_IndexCount{};
 };

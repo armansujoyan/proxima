@@ -20,6 +20,13 @@ struct IObject {
     }
 };
 
+struct Triangle {
+    glm::vec3 vertex1;
+    glm::vec3 vertex2;
+    glm::vec3 vertex3;
+    glm::vec3 normal;
+};
+
 class IndexedGeometry {
 public:
     explicit IndexedGeometry(const std::vector<glm::vec3> &raw_positions, const std::vector<glm::vec2> &raw_textures,
@@ -30,6 +37,7 @@ public:
     std::vector<glm::vec2> m_indexed_textures;
     std::vector<glm::vec3> m_indexed_normals;
     std::vector<unsigned int> m_indices;
+    std::vector<Triangle> m_triangles;
 private:
     void GenerateIndexedObject (
             const std::vector<glm::vec3> &raw_positions,

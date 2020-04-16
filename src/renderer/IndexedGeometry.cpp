@@ -23,11 +23,11 @@ void IndexedGeometry::GenerateIndexedObject(
         const std::vector<glm::vec3> &raw_normals,
         const std::vector<IObject> &coupled_indices) {
     unsigned int index = 0;
+    unsigned int counter = 1;
 
     std::vector<std::pair<IObject, unsigned int>> lookup;
 
     unsigned int existingIndex;
-
     for (auto current : coupled_indices) {
         existingIndex = findExistingIndex(lookup, &current);
         if(existingIndex == (unsigned int)-1) {
@@ -36,10 +36,28 @@ void IndexedGeometry::GenerateIndexedObject(
             this->m_indexed_textures.push_back(raw_textures[current.m_texture_index - 1]);
             this->m_indexed_normals.push_back(raw_normals[current.m_normal_index - 1]);
             lookup.emplace_back(current, index);
+
+            Triangle newTriangle = {};
             index++;
         } else {
             this->m_indices.push_back(existingIndex);
         }
+
+        if (counter % 3 == 0) {
+            Triangle newTriangle{};
+            newTriangle.vertex1 =  m_indexed_positions[m_indices[counter - 3]];
+            newTriangle.vertex2 =  m_indexed_positions[m_indices[counter - 2]];
+            newTriangle.vertex3 =  m_indexed_positions[m_indices[counter - 1]];
+
+            glm::vec3 edge1 = newTriangle.vertex2 - newTriangle.vertex1;
+            glm::vec3 edge2 = newTriangle.vertex3 - newTriangle.vertex2;
+
+            newTriangle.normal =  glm::normalize(glm::cross(edge1, edge2));
+
+            m_triangles.push_back(newTriangle);
+        }
+
+        counter++;
     }
 }
 

@@ -3,8 +3,9 @@
 //
 
 #include <glm/glm.hpp>
+#include <renderer/IndexedGeometry.h>
+#include <glm/gtc/matrix_transform.hpp>
 #include "Collision.h"
-
 
 bool Collision::sphereIntersectTriangle(const glm::vec3 &center, float radius, const glm::vec3 &velocity,
                                         const glm::vec3 &vertex1, const glm::vec3 &vertex2, const glm::vec3 &vertex3,
@@ -210,4 +211,69 @@ bool Collision::solveCollision(float a, float b, float c, float &t) {
     if (t0 < 0.0f) t = t1; else t = t0;
 
     return true;
+}
+
+bool Collision::ellipsoidIntersectScene(const glm::vec3 &center, const glm::vec3 &radius, const glm::vec3 &velocity,
+                                        Intersection *intersections, unsigned int &intersectionCount,
+                                        const std::vector<Triangle> &triangles) {
+    glm::vec3 eSpaceCenter, eSpaceVelocity, InverseRadius;
+    glm::vec3 ellipsoidVertices[3], eNormal;
+    glm::vec3 eIntersectNormal, eNewCenter;
+    unsigned int counter, newIndex = 0, fistIndex;
+    bool addToList;
+    float eInterval;
+    unsigned int i;
+
+    InverseRadius = glm::vec3(1 / radius.x, 1 / radius.y, 1 / radius.z);
+    glm::mat4 ellipsoidSpaceMatrix = glm::scale(glm::mat4(1.0f), InverseRadius);
+    glm::mat4 ellipsoidSpaceRadiusMatrix = glm::scale(glm::mat4( 1.0f), radius);
+
+    eSpaceCenter = center;
+    eSpaceVelocity = velocity;
+
+    eInterval = 1.0f;
+    intersectionCount = 0;
+
+    auto triangle_iterator = triangles.begin();
+    for(counter = 0; triangle_iterator != triangles.end(); ++triangle_iterator, ++counter) {
+        ellipsoidVertices[0] = glm::vec4(triangle_iterator->vertex1, 1.0f) * ellipsoidSpaceMatrix;
+        ellipsoidVertices[1] = glm::vec4(triangle_iterator->vertex2, 1.0f) * ellipsoidSpaceMatrix;
+        ellipsoidVertices[2] = glm::vec4(triangle_iterator->vertex3, 1.0f) * ellipsoidSpaceMatrix;
+
+        eNormal = glm::vec4(triangle_iterator->normal, 1.0f) * ellipsoidSpaceRadiusMatrix;
+        eNormal = glm::normalize(eNormal);
+
+         if (sphereIntersectTriangle(eSpaceCenter, 1.0f, eSpaceVelocity, ellipsoidVertices[0],
+                 ellipsoidVertices[1],ellipsoidVertices[2], eNormal,eInterval,
+                 eIntersectNormal)) {
+             if (eInterval > 0) {
+                 eNewCenter = eSpaceCenter + (eInterval * eSpaceVelocity);
+             } else {
+                 eNewCenter = eSpaceCenter - (eIntersectNormal * eSpaceVelocity);
+             }
+
+             addToList = false;
+             if (intersectionCount == 0 || eInterval < intersections[0].t) {
+                 addToList = true;
+                 newIndex = 0;
+                 intersectionCount = 1;
+             } else if(fabs(eInterval < intersections[0].t) < 1e-5f) {
+                 if (intersectionCount < m_maxIntersections) {
+                     addToList = true;
+                     newIndex = intersectionCount;
+                     intersectionCount++;
+                 }
+             }
+
+             if(addToList) {
+                 intersections[newIndex].t = eInterval;
+                 intersections[newIndex].intersectionNormal = eIntersectNormal;
+                 intersections[newIndex].nextCenter = eNewCenter + (eIntersectNormal * 1e-3f);
+                 intersections[newIndex].intersectionPoint = eNewCenter - eIntersectNormal;
+                 intersections[newIndex].triangleIndex = counter;
+             }
+         }
+    }
+
+    return (intersectionCount > 0);
 }
