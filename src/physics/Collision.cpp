@@ -3,9 +3,141 @@
 //
 
 #include <glm/glm.hpp>
-#include <renderer/IndexedGeometry.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include "Collision.h"
+
+bool Collision::collideEllipsoid(const glm::vec3 &center, const glm::vec3 &radius, const glm::vec3 &velocity,
+                                 const std::vector<Triangle> &triangles, glm::vec3 &newCenter, glm::vec3 &integrationVelocity) {
+    glm::vec3 vecOutputPosition, vecOutputVelocity, inverseRadius, vecNormal;
+    glm::vec3 eVelocity, eInputVelocity, eFrom, eTo;
+    unsigned int intersectionCount, i;
+    float fDistance;
+    bool bHit = false;
+
+    Intersection m_intersections[m_maxIntersections];
+
+    vecOutputPosition = center + velocity;
+    vecOutputVelocity = velocity;
+
+    inverseRadius = glm::vec3(1 / radius.x, 1 / radius.y, 1/ radius.z);
+
+    glm::mat4 eSpaceTransformMatrix = glm::scale(glm::mat4(1.0f), inverseRadius);
+    glm::mat4 eSpaceInverseTransformMatrix = glm::scale(glm::mat4(1.0f), radius);
+
+    eVelocity = glm::vec4(velocity, 1.0f) * eSpaceTransformMatrix;
+    eFrom = glm::vec4(center, 1.0f) * eSpaceTransformMatrix;
+    eTo = eFrom + eVelocity;
+
+    eInputVelocity = eVelocity;
+
+    for(i = 0; i < m_maxIntersections; i++) {
+        if(glm::length(velocity) < 1e-5f) return false;
+
+        if (ellipsoidIntersectScene(eFrom, radius, eVelocity, m_intersections, intersectionCount, triangles) ) {
+            Intersection& firstIntersection = m_intersections[0];
+
+            eFrom = firstIntersection.nextCenter;
+
+            fDistance = glm::dot(eTo - firstIntersection.nextCenter, firstIntersection.intersectionNormal);
+            eTo -= firstIntersection.intersectionNormal * fDistance;
+
+            eVelocity = eTo - eFrom;
+
+            glm::vec3 normalInE = glm::vec4(firstIntersection.intersectionNormal, 1.0f) * eSpaceTransformMatrix;
+            vecNormal = glm::normalize(normalInE);
+            fDistance = glm::dot(vecOutputVelocity, vecNormal);
+            vecOutputVelocity -= vecNormal * fDistance;
+
+            bHit = true;
+
+            if (glm::dot(eVelocity, vecOutputVelocity) < 0) {
+                eTo = eFrom;
+                break;
+            }
+        } else { break; }
+    }
+
+    if (bHit) {
+        if (i < m_maxIntersections) {
+            vecOutputPosition = glm::vec4(eTo, 1.0f) * eSpaceInverseTransformMatrix;
+        } else {
+            eFrom = glm::vec4(center, 1.0f) * eSpaceTransformMatrix;
+
+            intersectionCount = 0;
+            ellipsoidIntersectScene(eFrom, radius, eInputVelocity, m_intersections, intersectionCount, triangles);
+            vecOutputPosition = glm::vec4(m_intersections[0].nextCenter, 1.0f) * eSpaceInverseTransformMatrix;
+        }
+    }
+
+    newCenter = vecOutputPosition;
+    integrationVelocity = vecOutputVelocity;
+
+    return bHit;
+}
+
+bool Collision::ellipsoidIntersectScene(const glm::vec3 &center, const glm::vec3 &radius, const glm::vec3 &velocity,
+                                        Intersection *intersections, unsigned int &intersectionCount,
+                                        const std::vector<Triangle> &triangles) {
+    glm::vec3 eSpaceCenter, eSpaceVelocity, InverseRadius;
+    glm::vec3 ellipsoidVertices[3], eNormal;
+    glm::vec3 eIntersectNormal, eNewCenter;
+    unsigned int counter, newIndex = 0;
+    bool addToList;
+    float eInterval;
+
+    InverseRadius = glm::vec3(1 / radius.x, 1 / radius.y, 1 / radius.z);
+    glm::mat4 ellipsoidSpaceMatrix = glm::scale(glm::mat4(1.0f), InverseRadius);
+    glm::mat4 ellipsoidSpaceRadiusMatrix = glm::scale(glm::mat4( 1.0f), radius);
+
+    eSpaceCenter = center;
+    eSpaceVelocity = velocity;
+
+    eInterval = 1.0f;
+    intersectionCount = 0;
+
+    auto triangle_iterator = triangles.begin();
+    for(counter = 0; triangle_iterator != triangles.end(); ++triangle_iterator, ++counter) {
+        ellipsoidVertices[0] = glm::vec4(triangle_iterator->vertex1, 1.0f) * ellipsoidSpaceMatrix;
+        ellipsoidVertices[1] = glm::vec4(triangle_iterator->vertex2, 1.0f) * ellipsoidSpaceMatrix;
+        ellipsoidVertices[2] = glm::vec4(triangle_iterator->vertex3, 1.0f) * ellipsoidSpaceMatrix;
+
+        eNormal = glm::vec4(triangle_iterator->normal, 1.0f) * ellipsoidSpaceRadiusMatrix;
+        eNormal = glm::normalize(eNormal);
+
+        if (sphereIntersectTriangle(eSpaceCenter, 1.0f, eSpaceVelocity, ellipsoidVertices[0],
+                                    ellipsoidVertices[1],ellipsoidVertices[2], eNormal,eInterval,
+                                    eIntersectNormal)) {
+            if (eInterval > 0) {
+                eNewCenter = eSpaceCenter + (eInterval * eSpaceVelocity);
+            } else {
+                eNewCenter = eSpaceCenter - (eIntersectNormal * eSpaceVelocity);
+            }
+
+            addToList = false;
+            if (intersectionCount == 0 || eInterval < intersections[0].t) {
+                addToList = true;
+                newIndex = 0;
+                intersectionCount = 1;
+            } else if(fabs(eInterval < intersections[0].t) < 1e-5f) {
+                if (intersectionCount < m_maxIntersections) {
+                    addToList = true;
+                    newIndex = intersectionCount;
+                    intersectionCount++;
+                }
+            }
+
+            if(addToList) {
+                intersections[newIndex].t = eInterval;
+                intersections[newIndex].intersectionNormal = eIntersectNormal;
+                intersections[newIndex].nextCenter = eNewCenter + (eIntersectNormal * 1e-3f);
+                intersections[newIndex].intersectionPoint = eNewCenter - eIntersectNormal;
+                intersections[newIndex].triangleIndex = counter;
+            }
+        }
+    }
+
+    return (intersectionCount > 0);
+}
 
 bool Collision::sphereIntersectTriangle(const glm::vec3 &center, float radius, const glm::vec3 &velocity,
                                         const glm::vec3 &vertex1, const glm::vec3 &vertex2, const glm::vec3 &vertex3,
@@ -211,69 +343,4 @@ bool Collision::solveCollision(float a, float b, float c, float &t) {
     if (t0 < 0.0f) t = t1; else t = t0;
 
     return true;
-}
-
-bool Collision::ellipsoidIntersectScene(const glm::vec3 &center, const glm::vec3 &radius, const glm::vec3 &velocity,
-                                        Intersection *intersections, unsigned int &intersectionCount,
-                                        const std::vector<Triangle> &triangles) {
-    glm::vec3 eSpaceCenter, eSpaceVelocity, InverseRadius;
-    glm::vec3 ellipsoidVertices[3], eNormal;
-    glm::vec3 eIntersectNormal, eNewCenter;
-    unsigned int counter, newIndex = 0, fistIndex;
-    bool addToList;
-    float eInterval;
-    unsigned int i;
-
-    InverseRadius = glm::vec3(1 / radius.x, 1 / radius.y, 1 / radius.z);
-    glm::mat4 ellipsoidSpaceMatrix = glm::scale(glm::mat4(1.0f), InverseRadius);
-    glm::mat4 ellipsoidSpaceRadiusMatrix = glm::scale(glm::mat4( 1.0f), radius);
-
-    eSpaceCenter = center;
-    eSpaceVelocity = velocity;
-
-    eInterval = 1.0f;
-    intersectionCount = 0;
-
-    auto triangle_iterator = triangles.begin();
-    for(counter = 0; triangle_iterator != triangles.end(); ++triangle_iterator, ++counter) {
-        ellipsoidVertices[0] = glm::vec4(triangle_iterator->vertex1, 1.0f) * ellipsoidSpaceMatrix;
-        ellipsoidVertices[1] = glm::vec4(triangle_iterator->vertex2, 1.0f) * ellipsoidSpaceMatrix;
-        ellipsoidVertices[2] = glm::vec4(triangle_iterator->vertex3, 1.0f) * ellipsoidSpaceMatrix;
-
-        eNormal = glm::vec4(triangle_iterator->normal, 1.0f) * ellipsoidSpaceRadiusMatrix;
-        eNormal = glm::normalize(eNormal);
-
-         if (sphereIntersectTriangle(eSpaceCenter, 1.0f, eSpaceVelocity, ellipsoidVertices[0],
-                 ellipsoidVertices[1],ellipsoidVertices[2], eNormal,eInterval,
-                 eIntersectNormal)) {
-             if (eInterval > 0) {
-                 eNewCenter = eSpaceCenter + (eInterval * eSpaceVelocity);
-             } else {
-                 eNewCenter = eSpaceCenter - (eIntersectNormal * eSpaceVelocity);
-             }
-
-             addToList = false;
-             if (intersectionCount == 0 || eInterval < intersections[0].t) {
-                 addToList = true;
-                 newIndex = 0;
-                 intersectionCount = 1;
-             } else if(fabs(eInterval < intersections[0].t) < 1e-5f) {
-                 if (intersectionCount < m_maxIntersections) {
-                     addToList = true;
-                     newIndex = intersectionCount;
-                     intersectionCount++;
-                 }
-             }
-
-             if(addToList) {
-                 intersections[newIndex].t = eInterval;
-                 intersections[newIndex].intersectionNormal = eIntersectNormal;
-                 intersections[newIndex].nextCenter = eNewCenter + (eIntersectNormal * 1e-3f);
-                 intersections[newIndex].intersectionPoint = eNewCenter - eIntersectNormal;
-                 intersections[newIndex].triangleIndex = counter;
-             }
-         }
-    }
-
-    return (intersectionCount > 0);
 }
