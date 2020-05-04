@@ -18,6 +18,7 @@ struct Intersection {
 };
 
 class Collision {
+public:
     static bool
     collideEllipsoid(const glm::vec3 &center, const glm::vec3 &radius, const glm::vec3 &velocity,
                      const std::vector<Triangle> &triangles, glm::vec3 &newCenter, glm::vec3 &integrationVelocity);

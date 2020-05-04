@@ -50,7 +50,9 @@ void Mesh::InitializeMesh(const IndexedGeometry *model) {
 }
 
 void Mesh::Draw() {
-    m_material->attach();
+    if (m_material != nullptr) {
+        m_material->attach();
+    }
 
     meshVao->bind();
 
@@ -58,7 +60,9 @@ void Mesh::Draw() {
 
     meshVao->unbind();
 
-    m_material->detach();
+    if (m_material != nullptr) {
+        m_material->detach();
+    }
 }
 
 Mesh::~Mesh() {

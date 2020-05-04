@@ -8,10 +8,16 @@
 
 bool Collision::collideEllipsoid(const glm::vec3 &center, const glm::vec3 &radius, const glm::vec3 &velocity,
                                  const std::vector<Triangle> &triangles, glm::vec3 &newCenter, glm::vec3 &integrationVelocity) {
-    glm::vec3 vecOutputPosition, vecOutputVelocity, inverseRadius, vecNormal;
-    glm::vec3 eVelocity, eInputVelocity, eFrom, eTo;
+    auto vecOutputPosition = glm::vec3(0.0f);
+    auto vecOutputVelocity = glm::vec3(0.0f);
+    auto inverseRadius = glm::vec3(0.0f);
+    auto vecNormal = glm::vec3(0.0f);
+    auto eVelocity = glm::vec3(0.0f);
+    auto eInputVelocity = glm::vec3(0.0f);
+    auto eFrom = glm::vec3(0.0f);
+    auto eTo = glm::vec3(0.0f);
     unsigned int intersectionCount, i;
-    float fDistance;
+    float fDistance = 0;
     bool bHit = false;
 
     Intersection m_intersections[m_maxIntersections];
@@ -21,17 +27,14 @@ bool Collision::collideEllipsoid(const glm::vec3 &center, const glm::vec3 &radiu
 
     inverseRadius = glm::vec3(1 / radius.x, 1 / radius.y, 1/ radius.z);
 
-    glm::mat4 eSpaceTransformMatrix = glm::scale(glm::mat4(1.0f), inverseRadius);
-    glm::mat4 eSpaceInverseTransformMatrix = glm::scale(glm::mat4(1.0f), radius);
-
-    eVelocity = glm::vec4(velocity, 1.0f) * eSpaceTransformMatrix;
-    eFrom = glm::vec4(center, 1.0f) * eSpaceTransformMatrix;
+    eVelocity = velocity * inverseRadius;
+    eFrom = center * inverseRadius;
     eTo = eFrom + eVelocity;
 
     eInputVelocity = eVelocity;
 
-    for(i = 0; i < m_maxIntersections; i++) {
-        if(glm::length(velocity) < 1e-5f) return false;
+    for(i = 0; i < m_maxIntersections; ++i) {
+        if(glm::length(velocity) < 1e-5f) break;
 
         if (ellipsoidIntersectScene(eFrom, radius, eVelocity, m_intersections, intersectionCount, triangles) ) {
             Intersection& firstIntersection = m_intersections[0];
@@ -43,14 +46,14 @@ bool Collision::collideEllipsoid(const glm::vec3 &center, const glm::vec3 &radiu
 
             eVelocity = eTo - eFrom;
 
-            glm::vec3 normalInE = glm::vec4(firstIntersection.intersectionNormal, 1.0f) * eSpaceTransformMatrix;
+            glm::vec3 normalInE = firstIntersection.intersectionNormal * inverseRadius;
             vecNormal = glm::normalize(normalInE);
             fDistance = glm::dot(vecOutputVelocity, vecNormal);
             vecOutputVelocity -= vecNormal * fDistance;
 
             bHit = true;
 
-            if (glm::dot(eVelocity, vecOutputVelocity) < 0) {
+            if (glm::dot(eVelocity, eInputVelocity) < 0) {
                 eTo = eFrom;
                 break;
             }
@@ -59,13 +62,13 @@ bool Collision::collideEllipsoid(const glm::vec3 &center, const glm::vec3 &radiu
 
     if (bHit) {
         if (i < m_maxIntersections) {
-            vecOutputPosition = glm::vec4(eTo, 1.0f) * eSpaceInverseTransformMatrix;
+            vecOutputPosition = eTo * radius;
         } else {
-            eFrom = glm::vec4(center, 1.0f) * eSpaceTransformMatrix;
+            eFrom = center * inverseRadius;
 
             intersectionCount = 0;
             ellipsoidIntersectScene(eFrom, radius, eInputVelocity, m_intersections, intersectionCount, triangles);
-            vecOutputPosition = glm::vec4(m_intersections[0].nextCenter, 1.0f) * eSpaceInverseTransformMatrix;
+            vecOutputPosition = m_intersections[0].nextCenter * radius;
         }
     }
 
@@ -97,11 +100,11 @@ bool Collision::ellipsoidIntersectScene(const glm::vec3 &center, const glm::vec3
 
     auto triangle_iterator = triangles.begin();
     for(counter = 0; triangle_iterator != triangles.end(); ++triangle_iterator, ++counter) {
-        ellipsoidVertices[0] = glm::vec4(triangle_iterator->vertex1, 1.0f) * ellipsoidSpaceMatrix;
-        ellipsoidVertices[1] = glm::vec4(triangle_iterator->vertex2, 1.0f) * ellipsoidSpaceMatrix;
-        ellipsoidVertices[2] = glm::vec4(triangle_iterator->vertex3, 1.0f) * ellipsoidSpaceMatrix;
+        ellipsoidVertices[0] = triangle_iterator->vertex1 * InverseRadius;
+        ellipsoidVertices[1] = triangle_iterator->vertex2 * InverseRadius;
+        ellipsoidVertices[2] = triangle_iterator->vertex3 * InverseRadius;
 
-        eNormal = glm::vec4(triangle_iterator->normal, 1.0f) * ellipsoidSpaceRadiusMatrix;
+        eNormal = triangle_iterator->normal * radius;
         eNormal = glm::normalize(eNormal);
 
         if (sphereIntersectTriangle(eSpaceCenter, 1.0f, eSpaceVelocity, ellipsoidVertices[0],
@@ -110,7 +113,7 @@ bool Collision::ellipsoidIntersectScene(const glm::vec3 &center, const glm::vec3
             if (eInterval > 0) {
                 eNewCenter = eSpaceCenter + (eInterval * eSpaceVelocity);
             } else {
-                eNewCenter = eSpaceCenter - (eIntersectNormal * eSpaceVelocity);
+                eNewCenter = eSpaceCenter - (eIntersectNormal * eInterval);
             }
 
             addToList = false;
@@ -128,8 +131,8 @@ bool Collision::ellipsoidIntersectScene(const glm::vec3 &center, const glm::vec3
 
             if(addToList) {
                 intersections[newIndex].t = eInterval;
-                intersections[newIndex].intersectionNormal = eIntersectNormal;
                 intersections[newIndex].nextCenter = eNewCenter + (eIntersectNormal * 1e-3f);
+                intersections[newIndex].intersectionNormal = eIntersectNormal;
                 intersections[newIndex].intersectionPoint = eNewCenter - eIntersectNormal;
                 intersections[newIndex].triangleIndex = counter;
             }
@@ -177,19 +180,19 @@ bool Collision::isPointInsideTriangle(const glm::vec3 &point, const glm::vec3 &v
     pointToEdge = vertex1 - point;
     edgeNormal = glm::cross(edge, triangleNormal);
 
-    if (glm::dot(pointToEdge, triangleNormal) < 0.0f) return false;
+    if (glm::dot(pointToEdge, edgeNormal) < 0.0f) return false;
 
     edge = vertex3 - vertex2;
     pointToEdge = vertex2 - point;
     edgeNormal = glm::cross(edge, triangleNormal);
 
-    if (glm::dot(pointToEdge, triangleNormal) < 0.0f) return false;
+    if (glm::dot(pointToEdge, edgeNormal) < 0.0f) return false;
 
     edge = vertex1 - vertex3;
     pointToEdge = vertex3 - point;
     edgeNormal = glm::cross(edge, triangleNormal);
 
-    return !(glm::dot(pointToEdge, triangleNormal) < 0.0f);
+    return !(glm::dot(pointToEdge, edgeNormal) < 0.0f);
 
 }
 
@@ -280,7 +283,7 @@ bool Collision::sphereIntersectLineSegment(const glm::vec3 &center, float radius
         return sphereIntersectPoint(center, radius, velocity, vertex2, tMax, collisionNormal);
     }
 
-    pointOnEdge = vertex1 + (edge * t);
+    pointOnEdge = vertex1 + (edge * collisionCenterProjectionOnLine);
     collisionNormal = glm::normalize(collisionCenter - pointOnEdge);
     tMax = t;
 
