@@ -98,7 +98,6 @@ int main()
 
     delete mainCamera;
 
-    glfwTerminate();
     return 0;
 }
 

@@ -13,6 +13,7 @@
 class Window {
 public:
     Window(unsigned int width, unsigned int height, const std::string& title);
+    ~Window();
     void setInputMode(int mode, int value);
     void setResizeCallback(void (*fun)(GLFWwindow*, int, int));
     void setMouseCallback(void (*fun)(GLFWwindow*, double, double));

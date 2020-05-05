@@ -83,4 +83,8 @@ void Window::onEachFrame(void (*frameHandler)(float, Window*)) {
     }
 }
 
+Window::~Window() {
+    glfwTerminate();
+}
+
 
