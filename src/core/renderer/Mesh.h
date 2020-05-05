@@ -8,7 +8,7 @@
 #include <glad/glad.h>
 #include <string>
 #include <map>
-#include <renderer/opengl/VertexArray.h>
+#include <core/renderer/opengl/VertexArray.h>
 
 #include "IndexedGeometry.h"
 #include "Material.h"

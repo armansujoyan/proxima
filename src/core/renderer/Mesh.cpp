@@ -5,7 +5,7 @@
 #include "Mesh.h"
 #include "Material.h"
 #include <utils/Debug.h>
-#include <renderer/opengl/VertexArray.h>
+#include <core/renderer/opengl/VertexArray.h>
 
 Mesh::Mesh(const IndexedGeometry *indexedObject):
 meshVao(nullptr), m_material(nullptr), meshIndexBuffer(nullptr) {

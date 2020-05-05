@@ -2,7 +2,7 @@
 // Created by Arman Sujoyan on 4/3/20.
 //
 
-#include <renderer/Material.h>
+#include <core/renderer/Material.h>
 #include <utils/StringUtils.h>
 #include <utils/Logging.h>
 #include "OBJLoader.h"

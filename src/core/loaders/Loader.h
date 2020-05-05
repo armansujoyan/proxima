@@ -5,7 +5,7 @@
 #ifndef PROXIMA_LOADER_H
 #define PROXIMA_LOADER_H
 
-#include <renderer/Mesh.h>
+#include <core/renderer/Mesh.h>
 
 class Loader {
 public:

@@ -6,7 +6,7 @@
 #define PROXIMA_COLLISION_H
 
 #include <glm/vec3.hpp>
-#include <renderer/IndexedGeometry.h>
+#include <core/renderer/IndexedGeometry.h>
 #include <vector>
 
 struct Intersection {

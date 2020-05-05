@@ -6,9 +6,9 @@
 #define PROXIMA_OBJLOADER_H
 
 #include "map"
-#include <core/Loader.h>
-#include <renderer/Mesh.h>
-#include <renderer/Material.h>
+#include <core/loaders/Loader.h>
+#include <core/renderer/Mesh.h>
+#include <core/renderer/Material.h>
 
 typedef std::pair<std::string, IndexedGeometry*> GeometryMaterialPair;
 
