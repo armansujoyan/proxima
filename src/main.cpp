@@ -1,37 +1,35 @@
-#define GLM_ENABLE_EXPERIMENTAL
-
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/ext.hpp>
 #include <helpers/RootDir.h>
-#include <renderer/Shader.h>
+#include <core/renderer/Shader.h>
 
 #include <utils/Debug.h>
 
-#include <iostream>
-#include <renderer/Camera.h>
-#include <core/OBJLoader.h>
-#include <renderer/Mesh.h>
-#include <physics/Collision.h>
+#include <core/renderer/Camera.h>
+#include <core/loaders/OBJLoader.h>
+#include <core/renderer/Mesh.h>
+#include <core/physics/Collision.h>
+#include <core/windowing/Window.h>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void processInput(GLFWwindow *window);
+void processInput(Window window);
 void collideWithScene();
 
 const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
 
-const static std::string construction_path = ROOT_DIR "resources/objects/environments/construction/collision_model/construction_collision.obj";
+const static std::string construction_path = ROOT_DIR "resources/objects/environments/construction/construction.obj";
+const static std::string construction_collision_path = ROOT_DIR "resources/objects/environments/cs/map.obj";
 
 bool firstMouse = true;
 float movementSpeed = 10.0f;
 float lastX =  1920.0f / 2.0;
 float lastY =  1080.0 / 2.0;
+
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
 
 struct Ellipsoid {
     glm::vec3 radius;
@@ -39,69 +37,45 @@ struct Ellipsoid {
     glm::vec3 velocity;
 };
 
-float deltaTime = 0.0f;
-float lastFrame = 0.0f;
-
 Camera* mainCamera = new Camera;
 std::vector<Mesh*> construction;
+std::vector<Mesh*> construction_collision;
 std::vector<Triangle> sceneTriangles;
 Ellipsoid character{};
 
 int main()
 {
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    Window mainWindow = Window(SCR_WIDTH, SCR_HEIGHT, "Proxima | Demo");
 
-#ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
+    mainWindow.setInputMode(GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    mainWindow.setResizeCallback(framebuffer_size_callback);
+    mainWindow.setMouseCallback(mouse_callback);
+    mainWindow.setScrollCallback(scroll_callback);
 
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
-    if (window == NULL)
-    {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
-
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
-
-    mainCamera->setMovementSpeed(10);
     Shader ourShader(ROOT_DIR "resources/shaders/default.vs", ROOT_DIR "resources/shaders/default.fs");
     ourShader.use();
 
-    GLCall(glad_glEnable(GL_DEPTH_TEST));
-    GLCall(glad_glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ));
+    GLCall(glad_glEnable(GL_DEPTH_TEST)); // Move to renderer
+//    GLCall(glad_glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ));
 
-    character.radius = glm::vec3(0.3,0.3,0.3);
+    character.radius = glm::vec3(0.2,0.2,0.2);
     character.velocity = glm::vec3(0, 0, 0);
     character.position = glm::vec3(0, 0, 0);
 
     construction = OBJLoader::load(construction_path);
+//    construction_collision = OBJLoader::load(construction_collision_path);
 
     for(auto mesh: construction) {
         sceneTriangles.insert(sceneTriangles.end(), mesh->getTriangles().begin(), mesh->getTriangles().end());
     }
 
-    while (!glfwWindowShouldClose(window))
+    while (mainWindow.isOpen())
     {
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        processInput(window);
+        processInput(mainWindow);
 
         GLCall(glad_glClearColor(0.2f, 0.3f, 0.3f, 1.0f));
         GLCall(glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
@@ -117,7 +91,7 @@ int main()
         glm::mat4 view = mainCamera->GetViewMatrix();
         ourShader.setMat4("view", view);
 
-        glfwSwapBuffers(window);
+        mainWindow.updateFram();
         glfwPollEvents();
     }
 
@@ -126,8 +100,11 @@ int main()
         delete mesh;
     }
 
+    for(auto mesh: construction_collision) {
+        delete mesh;
+    }
+
     delete mainCamera;
-    // Remove allocated memory from heap
 
     glfwTerminate();
     return 0;
@@ -135,54 +112,52 @@ int main()
 
 void collideWithScene() {
     glm::vec3 nextPosition, integrationVelocity;
-    Collision::collideEllipsoid(character.position, character.radius, character.velocity,
+    bool collision = Collision::collideEllipsoid(character.position, character.radius, character.velocity,
                                 sceneTriangles, nextPosition, integrationVelocity);
+    int i = 0;
+    while(collision && i < 5) {
+        i++;
+        collision = Collision::collideEllipsoid(nextPosition, character.radius, integrationVelocity,
+                                                sceneTriangles, nextPosition, integrationVelocity);
+    }
     mainCamera->Position = nextPosition;
     character.position = nextPosition;
     character.velocity = integrationVelocity;
-    std::cout << glm::to_string(character.position) << std::endl;
 }
 
-void processInput(GLFWwindow *window)
+void processInput(Window window)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
+    if (window.keyDown(GLFW_KEY_ESCAPE))
+        window.close();
 
     float velocityFactor = movementSpeed * deltaTime;
 
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-//        mainCamera->ProcessKeyboard(FORWARD, deltaTime);
+    if (window.keyDown(GLFW_KEY_W)) {
         character.velocity = mainCamera->Front * velocityFactor;
         collideWithScene();
     }
 
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        mainCamera->ProcessKeyboard(BACKWARD, deltaTime);
-        character.position = mainCamera->Position;
+    if (window.keyDown(GLFW_KEY_S)) {
+        character.velocity = -mainCamera->Front * velocityFactor;
+        collideWithScene();
     }
 
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        mainCamera->ProcessKeyboard(LEFT, deltaTime);
-        character.position = mainCamera->Position;
+    if (window.keyDown(GLFW_KEY_A)) {
+        character.velocity = -mainCamera->Right * velocityFactor;
+        collideWithScene();
     }
 
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        mainCamera->ProcessKeyboard(RIGHT, deltaTime);
-        character.position = mainCamera->Position;
+    if (window.keyDown(GLFW_KEY_D)) {
+        character.velocity = mainCamera->Right * velocityFactor;
+        collideWithScene();
     }
 }
 
-// glfw: whenever the window size changed (by OS or user resize) this callback function executes
-// ---------------------------------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    // make sure the viewport matches the new window dimensions; note that width and
-    // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
 }
 
-// glfw: whenever the mouse moves, this callback is called
-// -------------------------------------------------------
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
     if (firstMouse)
