@@ -74,3 +74,7 @@ Mesh::~Mesh() {
         delete buffer;
     }
 }
+
+Shader* Mesh::getShader() {
+    return m_material->getShader();
+}

@@ -116,3 +116,7 @@ Material::~Material() {
     delete m_specular_texture;
     delete m_shader;
 }
+
+Shader* Material::getShader() {
+    return m_shader;
+}

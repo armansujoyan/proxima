@@ -23,6 +23,8 @@ public:
 
     const std::vector<Triangle> &getTriangles() const;
 
+    Shader* getShader();
+
 private:
     Material* m_material;
     void InitializeMesh(const IndexedGeometry *obj);

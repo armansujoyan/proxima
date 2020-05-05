@@ -10,6 +10,7 @@
 #include <core/renderer/Mesh.h>
 #include <core/physics/Collision.h>
 #include <core/windowing/Window.h>
+#include <core/renderer/Scene.h>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -35,8 +36,9 @@ struct Ellipsoid {
     glm::vec3 velocity;
 };
 
-Camera* mainCamera = new Camera;
-Shader ourShader;
+Camera* mainCamera = new Camera();
+Scene* mainScene;
+
 std::vector<Mesh*> construction;
 std::vector<Mesh*> construction_collision;
 std::vector<Triangle> sceneTriangles;
@@ -48,16 +50,7 @@ void frameHandler(float deltaTime, Window* window) {
     GLCall(glad_glClearColor(0.2f, 0.3f, 0.3f, 1.0f));
     GLCall(glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
-    ourShader.use();
-    for(auto mesh: construction) {
-        mesh->Draw();
-    }
-
-    glm::mat4 projection = glm::perspective(glm::radians(mainCamera->Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    ourShader.setMat4("projection", projection);
-
-    glm::mat4 view = mainCamera->GetViewMatrix();
-    ourShader.setMat4("view", view);
+    mainScene->render();
 };
 
 int main()
@@ -69,9 +62,6 @@ int main()
     mainWindow.setMouseCallback(mouse_callback);
     mainWindow.setScrollCallback(scroll_callback);
 
-    ourShader = Shader(ROOT_DIR "resources/shaders/default.vs", ROOT_DIR "resources/shaders/default.fs");
-    ourShader.use();
-
     GLCall(glad_glEnable(GL_DEPTH_TEST)); // Move to renderer
 //    GLCall(glad_glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ));
 
@@ -82,9 +72,14 @@ int main()
     construction = OBJLoader::load(construction_path);
     construction_collision = OBJLoader::load(construction_collision_path);
 
+    mainCamera->setHeight(SCR_HEIGHT);
+    mainCamera->setWidth(SCR_WIDTH);
+
     for(auto mesh: construction_collision) {
         sceneTriangles.insert(sceneTriangles.end(), mesh->getTriangles().begin(), mesh->getTriangles().end());
     }
+
+    mainScene = new Scene(construction, mainCamera);
 
     mainWindow.onEachFrame(frameHandler);
 

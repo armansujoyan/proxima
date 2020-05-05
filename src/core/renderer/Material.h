@@ -35,6 +35,9 @@ public:
     void addShader(Shader *shader);
     void attach();
     void detach();
+
+    Shader* getShader();
+
 private:
     std::string m_material_name{};
     glm::vec3 m_key_diffuse{};

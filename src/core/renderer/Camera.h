@@ -71,6 +71,10 @@ public:
         return glm::lookAt(Position, Position + Front, Up);
     }
 
+    glm::mat4 GetProjectionMatrix() {
+        return glm::perspective(glm::radians(Zoom), (float)width / (float)height, near, far);
+    }
+
     void ProcessKeyboard(Camera_Movement direction, float deltaTime)
     {
         float velocity = MovementSpeed * deltaTime;
@@ -82,6 +86,14 @@ public:
             Position -= Right * velocity;
         if (direction == RIGHT)
             Position += Right * velocity;
+    }
+
+    void setWidth(unsigned int width) {
+        this->width = width;
+    }
+
+    void setHeight(unsigned int height) {
+        this->height = height;
     }
 
     void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true)
@@ -128,6 +140,11 @@ private:
         Right = glm::normalize(glm::cross(Front, WorldUp));
         Up    = glm::normalize(glm::cross(Right, Front));
     }
+
+    unsigned int width;
+    unsigned int height;
+    float near = 0.1f;
+    float far = 1000.0f;
 };
 
 #endif //PROXIMA_CAMERA_H
