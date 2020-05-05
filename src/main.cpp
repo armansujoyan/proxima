@@ -14,22 +14,20 @@
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-void processInput(Window window);
+
+void processInput(Window* window, float deltaTime);
 void collideWithScene();
 
 const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
 
 const static std::string construction_path = ROOT_DIR "resources/objects/environments/construction/construction.obj";
-const static std::string construction_collision_path = ROOT_DIR "resources/objects/environments/cs/map.obj";
+const static std::string construction_collision_path = ROOT_DIR "resources/objects/environments/construction/collision_model/construction_collision.obj";
 
 bool firstMouse = true;
 float movementSpeed = 10.0f;
 float lastX =  1920.0f / 2.0;
 float lastY =  1080.0 / 2.0;
-
-float deltaTime = 0.0f;
-float lastFrame = 0.0f;
 
 struct Ellipsoid {
     glm::vec3 radius;
@@ -38,10 +36,29 @@ struct Ellipsoid {
 };
 
 Camera* mainCamera = new Camera;
+Shader ourShader;
 std::vector<Mesh*> construction;
 std::vector<Mesh*> construction_collision;
 std::vector<Triangle> sceneTriangles;
 Ellipsoid character{};
+
+void frameHandler(float deltaTime, Window* window) {
+    processInput(window, deltaTime);
+
+    GLCall(glad_glClearColor(0.2f, 0.3f, 0.3f, 1.0f));
+    GLCall(glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+
+    ourShader.use();
+    for(auto mesh: construction) {
+        mesh->Draw();
+    }
+
+    glm::mat4 projection = glm::perspective(glm::radians(mainCamera->Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    ourShader.setMat4("projection", projection);
+
+    glm::mat4 view = mainCamera->GetViewMatrix();
+    ourShader.setMat4("view", view);
+};
 
 int main()
 {
@@ -52,7 +69,7 @@ int main()
     mainWindow.setMouseCallback(mouse_callback);
     mainWindow.setScrollCallback(scroll_callback);
 
-    Shader ourShader(ROOT_DIR "resources/shaders/default.vs", ROOT_DIR "resources/shaders/default.fs");
+    ourShader = Shader(ROOT_DIR "resources/shaders/default.vs", ROOT_DIR "resources/shaders/default.fs");
     ourShader.use();
 
     GLCall(glad_glEnable(GL_DEPTH_TEST)); // Move to renderer
@@ -63,39 +80,14 @@ int main()
     character.position = glm::vec3(0, 0, 0);
 
     construction = OBJLoader::load(construction_path);
-//    construction_collision = OBJLoader::load(construction_collision_path);
+    construction_collision = OBJLoader::load(construction_collision_path);
 
-    for(auto mesh: construction) {
+    for(auto mesh: construction_collision) {
         sceneTriangles.insert(sceneTriangles.end(), mesh->getTriangles().begin(), mesh->getTriangles().end());
     }
 
-    while (mainWindow.isOpen())
-    {
-        float currentFrame = glfwGetTime();
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
+    mainWindow.onEachFrame(frameHandler);
 
-        processInput(mainWindow);
-
-        GLCall(glad_glClearColor(0.2f, 0.3f, 0.3f, 1.0f));
-        GLCall(glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-
-        ourShader.use();
-        for(auto mesh: construction) {
-            mesh->Draw();
-        }
-
-        glm::mat4 projection = glm::perspective(glm::radians(mainCamera->Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        ourShader.setMat4("projection", projection);
-
-        glm::mat4 view = mainCamera->GetViewMatrix();
-        ourShader.setMat4("view", view);
-
-        mainWindow.updateFram();
-        glfwPollEvents();
-    }
-
-    // Remove allocated memory from the heap
     for(auto mesh: construction) {
         delete mesh;
     }
@@ -125,29 +117,29 @@ void collideWithScene() {
     character.velocity = integrationVelocity;
 }
 
-void processInput(Window window)
+void processInput(Window* window, float deltaTime)
 {
-    if (window.keyDown(GLFW_KEY_ESCAPE))
-        window.close();
+    if (window->keyDown(GLFW_KEY_ESCAPE))
+        window->close();
 
     float velocityFactor = movementSpeed * deltaTime;
 
-    if (window.keyDown(GLFW_KEY_W)) {
+    if (window->keyDown(GLFW_KEY_W)) {
         character.velocity = mainCamera->Front * velocityFactor;
         collideWithScene();
     }
 
-    if (window.keyDown(GLFW_KEY_S)) {
+    if (window->keyDown(GLFW_KEY_S)) {
         character.velocity = -mainCamera->Front * velocityFactor;
         collideWithScene();
     }
 
-    if (window.keyDown(GLFW_KEY_A)) {
+    if (window->keyDown(GLFW_KEY_A)) {
         character.velocity = -mainCamera->Right * velocityFactor;
         collideWithScene();
     }
 
-    if (window.keyDown(GLFW_KEY_D)) {
+    if (window->keyDown(GLFW_KEY_D)) {
         character.velocity = mainCamera->Right * velocityFactor;
         collideWithScene();
     }

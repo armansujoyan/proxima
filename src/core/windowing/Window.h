@@ -17,21 +17,21 @@ public:
     void setResizeCallback(void (*fun)(GLFWwindow*, int, int));
     void setMouseCallback(void (*fun)(GLFWwindow*, double, double));
     void setScrollCallback(void (*fun)(GLFWwindow *, double, double));
+    void onEachFrame(void (*fun)(float, Window*));
     bool isOpen();
-
     bool keyDown(int i);
-
     void close();
-
-    void updateFram();
 
 private:
     GLFWwindow* window;
     unsigned int width;
     unsigned int height;
     std::string title;
-    float deltaTime;
-    float lastFrame;
+    float deltaTime = 0.0f;
+    float lastFrame = 0.0f;
+    bool isFrameCallbackSet = false;
+
+    void updateFrame();
 };
 
 

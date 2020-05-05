@@ -60,8 +60,27 @@ void Window::close() {
     glfwSetWindowShouldClose(window, true);
 }
 
-void Window::updateFram() {
+void Window::updateFrame() {
     glfwSwapBuffers(window);
+}
+
+void Window::onEachFrame(void (*frameHandler)(float, Window*)) {
+    if (isFrameCallbackSet) {
+        throw std::runtime_error("Frame function is already set in window.");
+    }
+
+    isFrameCallbackSet = true;
+
+    while(isOpen()) {
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
+        frameHandler(deltaTime, this);
+
+        updateFrame();
+        glfwPollEvents();
+    }
 }
 
 
