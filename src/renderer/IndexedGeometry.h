@@ -8,15 +8,31 @@
 #include <glm/glm.hpp>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 struct IObject {
     unsigned int m_position_index;
     unsigned int m_texture_index;
     unsigned int m_normal_index;
 
-    inline bool operator<(const IObject& rhs) const {
-        return std::tie(m_position_index, m_normal_index, m_texture_index)
-        < std::tie(rhs.m_position_index, rhs.m_normal_index, rhs.m_texture_index);
+    bool operator==(const IObject &other) const
+    { return (m_position_index == other.m_position_index
+              && m_texture_index == other.m_texture_index
+              && m_normal_index == other.m_normal_index);
+    }
+};
+
+struct IObjectHasher
+{
+    std::size_t operator()(const IObject& k) const
+    {
+        using std::size_t;
+        using std::hash;
+        using std::string;
+
+        return ((hash<unsigned int>()(k.m_position_index)
+                 ^ (hash<unsigned int>()(k.m_texture_index) << 1)) >> 1)
+               ^ (hash<unsigned int>()(k.m_normal_index) << 1);
     }
 };
 
@@ -46,7 +62,7 @@ private:
             const std::vector<IObject> &coupled_indices);
 
     static unsigned int findExistingIndex (
-            const std::vector<std::pair<IObject, unsigned int>>& lookup,
+            const std::unordered_map<IObject, unsigned int, IObjectHasher>& lookup,
             IObject* current);
 };
 
