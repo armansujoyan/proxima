@@ -12,6 +12,10 @@
 class Scene {
 public:
     Scene(std::vector<Mesh*> meshes, Camera* camera);
+    Scene(const Scene& scene);
+    Scene & operator=(const Scene &M);
+
+    ~Scene();
     void render();
 private:
     Camera* camera;

@@ -11,6 +11,7 @@
 #include <core/physics/Collision.h>
 #include <core/windowing/Window.h>
 #include <core/renderer/Scene.h>
+#include <core/renderer/Renderer.h>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -36,6 +37,7 @@ struct Ellipsoid {
     glm::vec3 velocity;
 };
 
+Renderer* GLRenderer = new Renderer(glm::vec3(0.3f, 0.3f, 0.3f));
 Camera* mainCamera = new Camera();
 Scene* mainScene;
 
@@ -46,11 +48,7 @@ Ellipsoid character{};
 
 void frameHandler(float deltaTime, Window* window) {
     processInput(window, deltaTime);
-
-    GLCall(glad_glClearColor(0.2f, 0.3f, 0.3f, 1.0f));
-    GLCall(glad_glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-
-    mainScene->render();
+    GLRenderer->render(*mainScene);
 };
 
 int main()
@@ -62,7 +60,7 @@ int main()
     mainWindow.setMouseCallback(mouse_callback);
     mainWindow.setScrollCallback(scroll_callback);
 
-    GLCall(glad_glEnable(GL_DEPTH_TEST)); // Move to renderer
+    GLCall(glad_glEnable(GL_DEPTH_TEST));
 //    GLCall(glad_glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ));
 
     character.radius = glm::vec3(0.2,0.2,0.2);
@@ -81,6 +79,8 @@ int main()
 
     mainScene = new Scene(construction, mainCamera);
 
+    GLRenderer->enableDepthTesting();
+
     mainWindow.onEachFrame(frameHandler);
 
     for(auto mesh: construction) {
@@ -91,7 +91,7 @@ int main()
         delete mesh;
     }
 
-    delete mainCamera;
+    delete mainScene;
 
     return 0;
 }

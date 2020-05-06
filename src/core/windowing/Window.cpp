@@ -24,8 +24,6 @@ Window::Window(unsigned int width, unsigned int height, const std::string& title
     }
     glfwMakeContextCurrent(window);
 
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         throw std::runtime_error("Failed to initialize GLAD");
@@ -33,7 +31,7 @@ Window::Window(unsigned int width, unsigned int height, const std::string& title
 }
 
 void Window::setInputMode(int mode, int value) {
-    glfwSetInputMode(window, mode, mode);
+    glfwSetInputMode(window, mode, value);
 }
 
 void Window::setResizeCallback(void (*fun)(GLFWwindow*, int, int)) {

@@ -20,3 +20,20 @@ void Scene::render() {
     }
 }
 
+Scene::~Scene() {
+    delete camera;
+}
+
+Scene::Scene(const Scene &scene) : meshes(scene.meshes) {
+    camera = new Camera(scene.camera->Position, scene.camera->Up, scene.camera->Yaw, scene.camera->Pitch);
+}
+
+Scene &Scene::operator=(const Scene &scene) {
+    if (this == &scene) {
+        return *this;
+    }
+
+    camera = new Camera(scene.camera->Position, scene.camera->Up, scene.camera->Yaw, scene.camera->Pitch);
+    return *this;
+}
+
