@@ -1,7 +1,7 @@
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 #include <helpers/RootDir.h>
-#include <core/renderer/Shader.h>
 
 #include <utils/Debug.h>
 
@@ -23,8 +23,8 @@ void collideWithScene();
 const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
 
-const static std::string construction_path = ROOT_DIR "resources/objects/environments/construction/construction.obj";
-const static std::string construction_collision_path = ROOT_DIR "resources/objects/environments/construction/collision_model/construction_collision.obj";
+const static std::string construction_path = ROOT_DIR "resources/objects/car_maya/car.obj";
+const static std::string construction_collision_path = ROOT_DIR "resources/objects/car_maya/car.obj";
 
 bool firstMouse = true;
 float movementSpeed = 10.0f;
@@ -64,8 +64,8 @@ int main()
 //    GLCall(glad_glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ));
 
     character.radius = glm::vec3(0.2,0.2,0.2);
-    character.velocity = glm::vec3(0, 0, 0);
-    character.position = glm::vec3(0, 0, 0);
+    character.velocity = mainCamera->Front;
+    character.position = mainCamera->Position;
 
     construction = OBJLoader::load(construction_path);
     construction_collision = OBJLoader::load(construction_collision_path);
@@ -100,15 +100,8 @@ void collideWithScene() {
     glm::vec3 nextPosition, integrationVelocity;
     bool collision = Collision::collideEllipsoid(character.position, character.radius, character.velocity,
                                 sceneTriangles, nextPosition, integrationVelocity);
-    int i = 0;
-    while(collision && i < 5) {
-        i++;
-        collision = Collision::collideEllipsoid(nextPosition, character.radius, integrationVelocity,
-                                                sceneTriangles, nextPosition, integrationVelocity);
-    }
-    mainCamera->Position = nextPosition;
-    character.position = nextPosition;
-    character.velocity = integrationVelocity;
+    mainCamera->Position = nextPosition + integrationVelocity;
+    character.position = nextPosition + integrationVelocity;
 }
 
 void processInput(Window* window, float deltaTime)

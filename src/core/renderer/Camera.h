@@ -143,7 +143,7 @@ private:
 
     unsigned int width;
     unsigned int height;
-    float near = 0.1f;
+    float near = 0.01f;
     float far = 1000.0f;
 };
 

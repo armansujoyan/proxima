@@ -9,7 +9,7 @@
 
 class Loader {
 public:
-    virtual Mesh load();
+    virtual std::vector<Mesh*> load();
 };
 
 #endif //PROXIMA_LOADER_H
